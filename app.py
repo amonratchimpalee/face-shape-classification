@@ -408,7 +408,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
 <div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
 <div class="dropzone" id="dz">
   <div class="dz-icon">📂</div>
-  <div class="dz-main">ลากไฟล์มาวางที่นี่ หรือ<span class="dz-btn">Browse files</span></div>
+  <div class="dz-main"><span class="dz-btn">Browse files</span></div>
   <div class="dz-sub">200MB per file · JPG, PNG</div>
 </div>
 <script>
