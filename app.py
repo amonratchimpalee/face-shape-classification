@@ -125,12 +125,11 @@ html,body,[class*="css"],p,span,div,label,button{font-family:'DM Sans',sans-seri
 .st-emotion-cache-1t3cokr{
     color:rgba(255,255,255,.9)!important;
     -webkit-text-fill-color:rgba(255,255,255,.9)!important}
+[data-testid="stFileUploaderDropzone"]{overflow:hidden!important}
+[data-testid="stFileUploaderDropzone"] input[type="file"]{
+    position:absolute!important;width:1px!important;height:1px!important;
+    opacity:0!important;pointer-events:none!important}
 [data-testid="stFileUploaderDropzone"] button{
-    all:unset!important;
-    display:inline-flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    padding:.4rem 1rem!important;
     background:rgba(255,255,255,.08)!important;
     border:1px solid rgba(255,255,255,.2)!important;
     border-radius:8px!important;
@@ -138,15 +137,12 @@ html,body,[class*="css"],p,span,div,label,button{font-family:'DM Sans',sans-seri
     -webkit-text-fill-color:#fff!important;
     font-size:.85rem!important;
     cursor:pointer!important;
-    white-space:nowrap!important;
-    flex-shrink:0!important;
     width:auto!important;
-    min-width:0!important;
-    max-width:fit-content!important}
+    flex-shrink:0!important}
 [data-testid="stFileUploaderDropzone"] button:hover{
     background:rgba(220,150,20,.2)!important;
     border-color:rgba(220,150,20,.6)!important}
-[data-testid="stFileUploaderDropzone"] button ~ button{
+[data-testid="stFileUploaderDropzone"] button:nth-of-type(n+2){
     display:none!important}
 
 [data-testid="stImage"] img{border-radius:18px!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:0 20px 60px rgba(0,0,0,.5)!important}
@@ -222,39 +218,7 @@ st.markdown("""
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
 """, unsafe_allow_html=True)
-components.html("""
-<script>
-(function() {
-    function dedupe() {
-        var zones = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzone"]');
-        zones.forEach(function(zone) {
-            var btns = Array.from(zone.querySelectorAll('button'));
-            // Find the visually overlapping "Browse files" buttons by checking bounding rects
-            var browseButtons = btns.filter(function(b) {
-                var txt = b.innerText.trim().toLowerCase();
-                return txt.includes('browse') || txt.includes('upload') || txt === '';
-            });
-            if (browseButtons.length > 1) {
-                // Keep the one with larger area (the styled one), hide others
-                browseButtons.sort(function(a, b) {
-                    var ra = a.getBoundingClientRect();
-                    var rb = b.getBoundingClientRect();
-                    return (rb.width * rb.height) - (ra.width * ra.height);
-                });
-                for (var i = 1; i < browseButtons.length; i++) {
-                    browseButtons[i].style.cssText += ';display:none!important';
-                }
-            }
-        });
-    }
-    setTimeout(dedupe, 100);
-    setTimeout(dedupe, 500);
-    setTimeout(dedupe, 1000);
-    new MutationObserver(function() { setTimeout(dedupe, 50); })
-        .observe(window.parent.document.body, { childList: true, subtree: true });
-})();
-</script>
-""", height=0)
+
 os.makedirs("saved_results", exist_ok=True)
 
 
