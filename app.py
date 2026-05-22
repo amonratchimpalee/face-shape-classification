@@ -384,11 +384,25 @@ if uploaded_file is not None:
 show_result = st.session_state.get("show_result", False)
 cached_file = st.session_state.get("cached_file", None)
 
-# ซ่อน uploader เมื่ออยู่ใน result mode
-if show_result:
-    st.markdown("<style>[data-testid='stFileUploader']{display:none!important}</style>", unsafe_allow_html=True)
+# กรณีกดปุ่ม reupload: show_result=True แต่ยังไม่มีไฟล์ใหม่
+waiting_new = show_result and cached_file is None
 
-if not show_result:
+if waiting_new or not show_result:
+    # แสดง uploader ปกติ
+    pass
+else:
+    # ซ่อน uploader เมื่อมีผลแล้ว
+    st.markdown("""
+<style>
+[data-testid="stFileUploader"] {
+    position: absolute !important; width: 1px !important;
+    height: 1px !important; overflow: hidden !important;
+    opacity: 0 !important; pointer-events: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+if not show_result or waiting_new:
     st.markdown("""
 <div class='upload-hint'>
   ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b>หน้าตรง</b> &nbsp;·&nbsp;
@@ -492,10 +506,7 @@ def predict_face_shape(img_pil):
     return face_shape, confidence, ratiog, score, img_out, face_detected
 
 
-if show_result:
-    if cached_file is None:
-        st.session_state["show_result"] = False
-        st.rerun()
+if show_result and cached_file is not None:
     img_pil = Image.open(cached_file)
     col1, col2 = st.columns(2, gap="large")
 
@@ -503,10 +514,11 @@ if show_result:
         with st.spinner("🔍 กำลังวิเคราะห์..."):
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
+        # ปุ่ม reupload — clear ไฟล์เก่า แต่คง show_result=True
+        # rerun → waiting_new=True → แสดง uploader → เลือกไฟล์ → วิเคราะห์ทันที
         if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
-            st.session_state["show_result"] = False
-            st.session_state["cached_file"] = None
             st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
+            st.session_state["cached_file"] = None
             st.rerun()
 
     with col2:
