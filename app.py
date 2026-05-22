@@ -218,9 +218,23 @@ uploaded_file = st.file_uploader("📸  อัปโหลดภาพใบห�
 st.markdown("""
 <div style='font-size:.78rem;color:rgba(255,255,255,.3);margin-top:-.5rem;margin-bottom:1rem;line-height:1.8'>
   ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b style='color:rgba(255,255,255,.5)'>หน้าตรง</b> &nbsp;·&nbsp;
-  แสงสว่างเพียงพอ &nbsp;·&nbsp;&nbsp;·&nbsp;
+  แสงสว่างเพียงพอ &nbsp;·&nbsp;
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
+<script>
+(function removeDuplicateUploadBtn() {
+    function dedupe() {
+        document.querySelectorAll('[data-testid="stFileUploaderDropzone"]').forEach(zone => {
+            const btns = zone.querySelectorAll('button');
+            if (btns.length > 1) {
+                for (let i = 1; i < btns.length; i++) btns[i].remove();
+            }
+        });
+    }
+    dedupe();
+    new MutationObserver(dedupe).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 """, unsafe_allow_html=True)
 os.makedirs("saved_results", exist_ok=True)
 
