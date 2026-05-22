@@ -138,61 +138,17 @@ html, body, [class*="css"], p, span, div, label, button {
     font-size: .95rem !important;
 }
 
-/* ─── Dropzone section — the main fix ─── */
+/* ─── ซ่อน native dropzone ทั้งหมด (ใช้ custom dropzone แทน) ─── */
 [data-testid="stFileUploader"] section,
-[data-testid="stFileUploaderDropzone"] {
-    background: rgba(255,255,255,.04) !important;
-    border: 1.5px dashed rgba(255,255,255,.18) !important;
-    border-radius: 18px !important;
-    padding: 1.5rem !important;
-    transition: border-color .2s, background .2s !important;
-    min-height: 100px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-}
-[data-testid="stFileUploader"] section:hover,
-[data-testid="stFileUploaderDropzone"]:hover {
-    border-color: rgba(220,150,20,.6) !important;
-    background: rgba(220,150,20,.05) !important;
-}
-
-/* ─── Dropzone inner text & icon ─── */
+[data-testid="stFileUploaderDropzone"],
 [data-testid="stFileUploaderDropzoneInstructions"],
-[data-testid="stFileUploaderDropzoneInstructions"] *,
-[data-testid="stFileUploaderDropzoneInstructions"] span,
-[data-testid="stFileUploaderDropzoneInstructions"] p,
-[data-testid="stFileUploaderDropzoneInstructions"] small {
-    color: rgba(255,255,255,.4) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.4) !important;
-    text-align: center !important;
-}
-
-/* ─── "Browse files" button ─── */
-[data-testid="stFileUploaderDropzone"] button,
-[data-testid="stFileUploader"] section button {
-    background: rgba(220,150,20,.15) !important;
-    border: 1px solid rgba(220,150,20,.45) !important;
-    border-radius: 10px !important;
-    color: rgba(255,200,80,.9) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
-    padding: .4rem 1.1rem !important;
-    font-size: .85rem !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
-    transition: background .2s !important;
-}
-[data-testid="stFileUploaderDropzone"] button:hover,
-[data-testid="stFileUploader"] section button:hover {
-    background: rgba(220,150,20,.28) !important;
-    border-color: rgba(220,150,20,.7) !important;
-}
-[data-testid="stFileUploaderDropzone"] button *,
-[data-testid="stFileUploader"] section button * {
-    color: rgba(255,200,80,.9) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+[data-testid="stFileUploader"] section button,
+[data-testid="stFileUploaderDropzone"] button {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
 }
 
 /* ─── File chip (after upload) ─── */
@@ -324,12 +280,135 @@ if not st.session_state.consent_given:
                     st.rerun()
     st.stop()
 
-# ─── File Uploader ───
+# ─── ซ่อน native file uploader widget ด้วย CSS แล้วใช้ label trick trigger มัน ───
+st.markdown("""
+<style>
+[data-testid="stFileUploader"] {
+    position: relative !important;
+}
+[data-testid="stFileUploader"] section,
+[data-testid="stFileUploaderDropzone"] {
+    opacity: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+}
+[data-testid="stFileUploader"] label {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ─── File Uploader (hidden native) ───
 uploaded_file = st.file_uploader(
-    "📸  อัปโหลดภาพใบหน้าของคุณ",
+    "upload",
     type=["jpg", "jpeg", "png"],
-    label_visibility="visible",
+    label_visibility="collapsed",
 )
+
+# ─── Custom dropzone UI + JS to trigger hidden input ───
+components.html("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: transparent; font-family: 'DM Sans', sans-serif; }
+.dropzone {
+    border: 1.5px dashed rgba(255,255,255,.2);
+    border-radius: 18px;
+    background: rgba(255,255,255,.04);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    user-select: none;
+}
+.dropzone:hover, .dropzone.over {
+    border-color: rgba(220,150,20,.65);
+    background: rgba(220,150,20,.06);
+}
+.dz-icon { font-size: 2rem; margin-bottom: .6rem; opacity: .5; }
+.dz-main { font-size: .95rem; color: rgba(255,255,255,.55); margin-bottom: .35rem; }
+.dz-main span {
+    color: rgba(255,200,80,.85);
+    font-weight: 500;
+    border: 1px solid rgba(220,150,20,.45);
+    border-radius: 8px;
+    padding: .25rem .75rem;
+    background: rgba(220,150,20,.12);
+    margin-left: .3rem;
+}
+.dz-sub { font-size: .78rem; color: rgba(255,255,255,.25); }
+.dz-file { display:none; margin-top:.75rem; font-size:.83rem; color:rgba(255,200,80,.75); }
+.dz-file.show { display:block; }
+</style>
+<div class="dropzone" id="dz">
+  <div class="dz-icon">📂</div>
+  <div class="dz-main">ลากไฟล์มาวางที่นี่ หรือ<span>Browse files</span></div>
+  <div class="dz-sub">200MB per file · JPG, PNG</div>
+  <div class="dz-file" id="fname"></div>
+</div>
+<script>
+(function() {
+    var dz = document.getElementById('dz');
+
+    function getInput(doc) {
+        return doc.querySelector('[data-testid="stFileUploader"] input[type="file"]');
+    }
+
+    function triggerUpload() {
+        var inp = null;
+        try { inp = getInput(window.parent.document); } catch(e) {}
+        if (!inp) { try { inp = getInput(document); } catch(e) {} }
+        if (inp) inp.click();
+    }
+
+    dz.addEventListener('click', triggerUpload);
+
+    dz.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dz.classList.add('over');
+    });
+    dz.addEventListener('dragleave', function() {
+        dz.classList.remove('over');
+    });
+    dz.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dz.classList.remove('over');
+        var inp = null;
+        try { inp = getInput(window.parent.document); } catch(e) {}
+        if (!inp) { try { inp = getInput(document); } catch(e) {} }
+        if (inp && e.dataTransfer.files.length) {
+            var dt = new DataTransfer();
+            dt.items.add(e.dataTransfer.files[0]);
+            inp.files = dt.files;
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    // watch for file selection to show filename
+    function watchInput() {
+        var inp = null;
+        try { inp = getInput(window.parent.document); } catch(e) {}
+        if (!inp) { try { inp = getInput(document); } catch(e) {} }
+        if (inp) {
+            inp.addEventListener('change', function() {
+                if (inp.files && inp.files[0]) {
+                    var fn = document.getElementById('fname');
+                    fn.textContent = '✓ ' + inp.files[0].name;
+                    fn.classList.add('show');
+                }
+            });
+        }
+    }
+    setTimeout(watchInput, 800);
+})();
+</script>
+""", height=160)
+
 st.markdown("""
 <div class='upload-hint'>
   ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b>หน้าตรง</b> &nbsp;·&nbsp;
@@ -337,43 +416,6 @@ st.markdown("""
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
 """, unsafe_allow_html=True)
-
-# ─── JS: fix duplicate "Browse files" button via window.parent ───
-components.html("""
-<script>
-(function() {
-    function fixBtn(doc) {
-        var uploaders = doc.querySelectorAll('[data-testid="stFileUploader"]');
-        uploaders.forEach(function(uploader) {
-            var btns = uploader.querySelectorAll('button');
-            if (btns.length < 2) return;
-            // เก็บปุ่มแรกไว้ ซ่อนที่เหลือ
-            for (var i = 1; i < btns.length; i++) {
-                btns[i].style.setProperty('display', 'none', 'important');
-            }
-            // ตรวจข้อความซ้ำในปุ่มแรก
-            var btn = btns[0];
-            var spans = btn.querySelectorAll('span, p');
-            if (spans.length > 1) {
-                for (var j = 1; j < spans.length; j++) {
-                    spans[j].style.setProperty('display', 'none', 'important');
-                }
-            }
-        });
-    }
-    function run() {
-        try { fixBtn(window.parent.document); } catch(e) {}
-        try { fixBtn(document); } catch(e) {}
-    }
-    run();
-    try {
-        new MutationObserver(run).observe(window.parent.document.body, {childList:true, subtree:true});
-    } catch(e) {
-        new MutationObserver(run).observe(document.body, {childList:true, subtree:true});
-    }
-})();
-</script>
-""", height=0)
 
 os.makedirs("saved_results", exist_ok=True)
 
