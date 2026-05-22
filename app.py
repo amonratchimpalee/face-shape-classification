@@ -49,12 +49,11 @@ def load_models():
 classes = ['Heart', 'Oblong', 'Oval', 'Round', 'Square']
 
 LANDMARK_GNATHION = 152
-# zygion — โหนกแก้มจริง ไม่ใช่ขอบหู
-LANDMARK_ZY_LEFT  = 116   # แก้จาก 234 → 116 (โหนกแก้มซ้าย)
-LANDMARK_ZY_RIGHT = 345   # แก้จาก 454 → 345 (โหนกแก้มขวา)
+LANDMARK_ZY_LEFT  = 116
+LANDMARK_ZY_RIGHT = 345
 
 shape_info = {
-    'Oval':   {'emoji':'🥚','color':[218,165,32],'gradient':'linear-gradient(135deg,#f7c948,#ffe08a)','accent':'#ffe08a',
+    'Oval':   {'emoji':'🥚','color':[218,165,32],'gradient':'linear-gradient(135deg,#f7c948,#ffe08a)','accent':'#f7c948',
                'desc':'ใบหน้ารูปไข่',
                'hair':'ผมสั้นถึงกลาง เช่น blunt bob, shoulder-length, pixie cut, long layers และหน้าม้าปัดข้าง',
                'glasses':'ทุกทรงเหมาะกับใบหน้ารูปไข่ แนะนำ rectangle, square และ aviator เพื่อเพิ่มความคมชัด'},
@@ -82,71 +81,201 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
-[data-testid="stAppViewContainer"],[data-testid="stAppViewContainer"]>div,.main,.block-container{background:transparent!important}
-[data-testid="stAppViewContainer"]{
-    background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(200,130,0,.22) 0%,transparent 60%),
-               radial-gradient(ellipse 60% 40% at 80% 110%,rgba(180,80,0,.18) 0%,transparent 60%),
-               #0d0a04!important;min-height:100vh}
-[data-testid="stHeader"],[data-testid="stToolbar"]{background:transparent!important}
-[data-testid="stDecoration"]{display:none!important}
-.main .block-container{padding-top:2.5rem!important;max-width:780px}
-html,body,[class*="css"],p,span,div,label,button{font-family:'DM Sans',sans-serif!important;color:rgba(255,255,255,.85)}
-[data-testid="stFileUploader"] small, [data-testid="stFileUploader"] p,
-[data-testid="stFileUploader"] span, [data-testid="stFileUploader"] div{
-    color:rgba(255,255,255,.85)!important;-webkit-text-fill-color:rgba(255,255,255,.85)!important}
+/* ─── Global background ─── */
+[data-testid="stAppViewContainer"],
+[data-testid="stAppViewContainer"] > div,
+.main, .block-container {
+    background: transparent !important;
+}
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(200,130,0,.22) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(180,80,0,.18) 0%, transparent 60%),
+        #0d0a04 !important;
+    min-height: 100vh;
+}
+[data-testid="stHeader"],
+[data-testid="stToolbar"] { background: transparent !important; }
+[data-testid="stDecoration"] { display: none !important; }
+.main .block-container { padding-top: 2.5rem !important; max-width: 780px; }
+html, body, [class*="css"], p, span, div, label, button {
+    font-family: 'DM Sans', sans-serif !important;
+    color: rgba(255,255,255,.85);
+}
 
-.hero-wrap{text-align:center;margin-bottom:1.8rem}
-.hero-title{font-family:'Playfair Display',serif!important;font-size:clamp(2rem,6vw,3.2rem);font-weight:900!important;
-    background:linear-gradient(135deg,#fff 0%,#ffe8a0 45%,#e8860a 100%);
-    -webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;
-    background-clip:text!important;letter-spacing:-.02em;line-height:1.1;margin-bottom:.4rem}
-.hero-sub{color:rgba(255,255,255,.3)!important;font-size:.85rem;letter-spacing:.12em;
-    text-transform:uppercase;-webkit-text-fill-color:rgba(255,255,255,.3)!important}
-.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),rgba(220,150,20,.6),rgba(255,255,255,.08),transparent);margin:0 0 2rem}
+/* ─── Hero ─── */
+.hero-wrap { text-align: center; margin-bottom: 1.8rem; }
+.hero-title {
+    font-family: 'Playfair Display', serif !important;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 900 !important;
+    background: linear-gradient(135deg, #fff 0%, #ffe8a0 45%, #e8860a 100%);
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    margin-bottom: .4rem;
+}
+.hero-sub {
+    color: rgba(255,255,255,.3) !important;
+    font-size: .85rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    -webkit-text-fill-color: rgba(255,255,255,.3) !important;
+}
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), rgba(220,150,20,.6), rgba(255,255,255,.08), transparent);
+    margin: 0 0 2rem;
+}
 
-[data-testid="stFileUploader"] label,[data-testid="stFileUploader"] label *{
-    color:rgba(255,255,255,.7)!important;-webkit-text-fill-color:rgba(255,255,255,.7)!important;font-size:.95rem!important}
-[data-testid="stFileUploader"] section{
-    background:rgba(255,255,255,.04)!important;
-    border:1.5px dashed rgba(255,255,255,.18)!important;
-    border-radius:18px!important;
-    padding:.75rem 1.2rem!important;
-    position:relative!important}
-[data-testid="stFileUploader"] section:hover{
-    border-color:rgba(220,150,20,.6)!important;
-    background:rgba(220,150,20,.05)!important}
-[data-testid="stFileUploaderDropzoneInstructions"]{
-    color:rgba(255,255,255,.4)!important;-webkit-text-fill-color:rgba(255,255,255,.4)!important}
+/* ─── File uploader label ─── */
+[data-testid="stFileUploader"] label,
+[data-testid="stFileUploader"] label * {
+    color: rgba(255,255,255,.7) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.7) !important;
+    font-size: .95rem !important;
+}
+
+/* ─── Dropzone section — the main fix ─── */
+[data-testid="stFileUploader"] section,
+[data-testid="stFileUploaderDropzone"] {
+    background: rgba(255,255,255,.04) !important;
+    border: 1.5px dashed rgba(255,255,255,.18) !important;
+    border-radius: 18px !important;
+    padding: 1.5rem !important;
+    transition: border-color .2s, background .2s !important;
+    min-height: 100px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+[data-testid="stFileUploader"] section:hover,
+[data-testid="stFileUploaderDropzone"]:hover {
+    border-color: rgba(220,150,20,.6) !important;
+    background: rgba(220,150,20,.05) !important;
+}
+
+/* ─── Dropzone inner text & icon ─── */
+[data-testid="stFileUploaderDropzoneInstructions"],
+[data-testid="stFileUploaderDropzoneInstructions"] *,
 [data-testid="stFileUploaderDropzoneInstructions"] span,
-[data-testid="stFileUploaderDropzoneInstructions"] p{
-    color:rgba(255,255,255,.4)!important;-webkit-text-fill-color:rgba(255,255,255,.4)!important}
-[data-testid="stFileChipName"],
-[data-testid="stFileChipName"] *,
-.st-emotion-cache-1t3cokr{
-    color:rgba(255,255,255,.9)!important;
-    -webkit-text-fill-color:rgba(255,255,255,.9)!important}
-[data-testid="stFileUploader"] section button{
-    background:rgba(255,255,255,.08)!important;
-    border:1px solid rgba(255,255,255,.2)!important;
-    border-radius:8px!important;
-    color:#fff!important;
-    -webkit-text-fill-color:#fff!important}
-[data-testid="stFileUploader"] section button *{
-    color:#fff!important;
-    -webkit-text-fill-color:#fff!important}
-[data-testid="stFileUploaderDropzone"] button~button{
-    display:none!important}
+[data-testid="stFileUploaderDropzoneInstructions"] p,
+[data-testid="stFileUploaderDropzoneInstructions"] small {
+    color: rgba(255,255,255,.4) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.4) !important;
+    text-align: center !important;
+}
 
-[data-testid="stImage"] img{border-radius:18px!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:0 20px 60px rgba(0,0,0,.5)!important}
-[data-testid="stSpinner"] *{color:rgba(255,255,255,.5)!important}
-[data-testid="stAlert"]{background:rgba(233,30,99,.1)!important;border:1px solid rgba(233,30,99,.3)!important;border-radius:14px!important}
-[data-testid="stAlert"] *{color:#ff6b9d!important;-webkit-text-fill-color:#ff6b9d!important}
-.footer{text-align:center;padding:2.5rem 0 1rem;font-size:.75rem;color:rgba(255,255,255,.15)!important;
-    -webkit-text-fill-color:rgba(255,255,255,.15)!important;letter-spacing:.06em}
-.footer b{color:rgba(220,160,20,.6)!important;-webkit-text-fill-color:rgba(220,160,20,.6)!important}
+/* ─── "Browse files" button inside dropzone ─── */
+[data-testid="stFileUploaderDropzone"] button,
+[data-testid="stFileUploader"] section button {
+    background: rgba(220,150,20,.15) !important;
+    border: 1px solid rgba(220,150,20,.45) !important;
+    border-radius: 10px !important;
+    color: rgba(255,200,80,.9) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+    padding: .45rem 1.2rem !important;
+    font-size: .85rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: background .2s !important;
+    margin-top: 4px !important;
+}
+[data-testid="stFileUploaderDropzone"] button:hover,
+[data-testid="stFileUploader"] section button:hover {
+    background: rgba(220,150,20,.28) !important;
+    border-color: rgba(220,150,20,.7) !important;
+}
+[data-testid="stFileUploaderDropzone"] button *,
+[data-testid="stFileUploader"] section button * {
+    color: rgba(255,200,80,.9) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+}
+
+/* ─── Hide duplicate "X" / second button ─── */
+[data-testid="stFileUploaderDropzone"] button ~ button { display: none !important; }
+
+/* ─── File chip (after upload) ─── */
+[data-testid="stFileChipName"],
+[data-testid="stFileChipName"] * {
+    color: rgba(255,255,255,.9) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.9) !important;
+}
+
+/* ─── Image preview ─── */
+[data-testid="stImage"] img {
+    border-radius: 18px !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
+}
+
+/* ─── Misc ─── */
+[data-testid="stSpinner"] * { color: rgba(255,255,255,.5) !important; }
+[data-testid="stAlert"] {
+    background: rgba(233,30,99,.1) !important;
+    border: 1px solid rgba(233,30,99,.3) !important;
+    border-radius: 14px !important;
+}
+[data-testid="stAlert"] * { color: #ff6b9d !important; -webkit-text-fill-color: #ff6b9d !important; }
+
+/* ─── Checkbox ─── */
+[data-testid="stCheckbox"] label,
+[data-testid="stCheckbox"] label * {
+    color: rgba(255,255,255,.7) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.7) !important;
+    font-size: .88rem !important;
+}
+[data-testid="stCheckbox"] [data-baseweb="checkbox"] div {
+    border-color: rgba(220,150,20,.5) !important;
+}
+
+/* ─── Primary button (consent confirm) ─── */
+[data-testid="stButton"] button[kind="primary"],
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #c89600, #f5c842) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: #1a0f00 !important;
+    -webkit-text-fill-color: #1a0f00 !important;
+    font-weight: 600 !important;
+    font-size: .92rem !important;
+    padding: .6rem 1.5rem !important;
+    transition: opacity .2s !important;
+}
+[data-testid="stButton"] button[kind="primary"]:hover { opacity: .88 !important; }
+
+/* ─── Footer ─── */
+.footer {
+    text-align: center;
+    padding: 2.5rem 0 1rem;
+    font-size: .75rem;
+    color: rgba(255,255,255,.15) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.15) !important;
+    letter-spacing: .06em;
+}
+.footer b { color: rgba(220,160,20,.6) !important; -webkit-text-fill-color: rgba(220,160,20,.6) !important; }
+
+/* ─── Hint row below uploader ─── */
+.upload-hint {
+    font-size: .78rem;
+    color: rgba(255,255,255,.3) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.3) !important;
+    margin-top: -.4rem;
+    margin-bottom: 1rem;
+    line-height: 1.8;
+}
+.upload-hint b {
+    color: rgba(255,255,255,.5) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.5) !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
+# ─── Hero ───
 st.markdown("""
 <div class="hero-wrap">
   <div class="hero-title">✨ Face Shape classification</div>
@@ -157,7 +286,7 @@ st.markdown("""
 
 face_shape_model, face_mesh = load_models()
 
-# ---- Consent Gate ----
+# ─── Consent Gate ───
 if "consent_given" not in st.session_state:
     st.session_state.consent_given = False
 
@@ -166,7 +295,6 @@ CONSENT_HTML = """
      border-radius:18px;padding:1.5rem;margin-bottom:1rem'>
   <p style='color:rgba(220,150,20,.9);font-size:.75rem;text-transform:uppercase;
      letter-spacing:.1em;margin-bottom:.75rem'>🛡️ นโยบายความเป็นส่วนตัว · PDPA</p>
-
   <p style='color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;margin-bottom:.4rem'>
     ข้อมูลที่เราประมวลผล</p>
   <p style='color:rgba(255,255,255,.45);font-size:.82rem;line-height:1.7;margin-bottom:.5rem'>
@@ -174,7 +302,6 @@ CONSENT_HTML = """
     ตาม PDPA มาตรา 26 ประมวลผลในหน่วยความจำชั่วคราวเท่านั้น<br>
     ✓ ไม่บันทึกภาพ &nbsp;·&nbsp; ✓ ไม่แชร์ข้อมูล &nbsp;·&nbsp; ✓ ลบออกหลังวิเคราะห์
   </p>
-
   <p style='color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;
      margin-bottom:.4rem;margin-top:.85rem'>วัตถุประสงค์การประมวลผล</p>
   <p style='color:rgba(255,255,255,.45);font-size:.82rem;line-height:1.9'>
@@ -201,15 +328,20 @@ if not st.session_state.consent_given:
                     st.rerun()
     st.stop()
 
-# ---- File Uploader ----
-uploaded_file = st.file_uploader("📸  อัปโหลดภาพใบหน้าของคุณ", type=["jpg","jpeg","png"])
+# ─── File Uploader ───
+uploaded_file = st.file_uploader(
+    "📸  อัปโหลดภาพใบหน้าของคุณ",
+    type=["jpg", "jpeg", "png"],
+    label_visibility="visible",
+)
 st.markdown("""
-<div style='font-size:.78rem;color:rgba(255,255,255,.3);margin-top:-.5rem;margin-bottom:1rem;line-height:1.8'>
-  ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b style='color:rgba(255,255,255,.5)'>หน้าตรง</b> &nbsp;·&nbsp;
+<div class='upload-hint'>
+  ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b>หน้าตรง</b> &nbsp;·&nbsp;
   แสงสว่างเพียงพอ &nbsp;·&nbsp; ไม่สวมแว่น &nbsp;·&nbsp;
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
 """, unsafe_allow_html=True)
+
 os.makedirs("saved_results", exist_ok=True)
 
 
@@ -287,7 +419,6 @@ def predict_face_shape(img_pil):
         tr = (mid_face_x, hairline_y)
 
         gn = (max(0, min(gn[0], iw-1)), max(0, min(gn[1], ih-1)))
-
         draw_landmarks_mesh(img_out, tr, gn, zy_l, zy_r, c_bgr)
 
         face_h_meas = abs(gn[1] - tr[1])
@@ -419,5 +550,4 @@ body{{background:transparent;font-family:'DM Sans',sans-serif}}
 
             components.html(card_html, height=820, scrolling=False)
 
-st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>",
-            unsafe_allow_html=True)
+st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>", unsafe_allow_html=True)
