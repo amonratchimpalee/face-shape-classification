@@ -355,7 +355,7 @@ if not show_result:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; }
+body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; width: 100%; }
 .label {
     font-size: .95rem;
     color: rgba(255,255,255,.65);
@@ -371,6 +371,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
     cursor: pointer;
     transition: border-color .2s, background .2s;
     user-select: none;
+    width: 100%;
 }
 .dropzone:hover, .dropzone.over {
     border-color: rgba(220,150,20,.6);
@@ -428,7 +429,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
     });
 })();
 </script>
-""", height=170)
+""", height=170, scrolling=False)
 
 if not show_result:
     st.markdown("""
