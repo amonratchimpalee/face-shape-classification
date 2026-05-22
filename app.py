@@ -206,10 +206,18 @@ html, body, [class*="css"], p, span, div, label, button {
     color: transparent !important;
     -webkit-text-fill-color: transparent !important;
 }
-/* ─── ซ่อนปุ่มที่ 2 ที่ซ้อนกัน ─── */
+/* ─── ซ่อนปุ่ม "Browse files" ที่ 2 ซึ่งอยู่นอก section (เป็น sibling ของ section) ─── */
 [data-testid="stFileUploaderDropzone"] button ~ button,
-[data-testid="stFileUploader"] section button ~ button {
+[data-testid="stFileUploader"] section button ~ button,
+[data-testid="stFileUploader"] section ~ button,
+[data-testid="stFileUploaderDropzone"] ~ button {
     display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
 }
 
 /* ─── File chip (after upload) ─── */
@@ -288,13 +296,32 @@ html, body, [class*="css"], p, span, div, label, button {
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Hero ───
+# ─── Hero + JS fix for duplicate Browse files button ───
 st.markdown("""
 <div class="hero-wrap">
   <div class="hero-title">✨ Face Shape classification</div>
   <div class="hero-sub">วิเคราะห์รูปใบหน้าและแนะนำทรงผมพร้อมแว่นตาที่เหมาะสม</div>
 </div>
 <div class="divider"></div>
+<script>
+(function hideDupeUploadBtn() {
+    function fix() {
+        const uploaders = document.querySelectorAll('[data-testid="stFileUploader"]');
+        uploaders.forEach(function(uploader) {
+            const btns = uploader.querySelectorAll('button');
+            // ถ้ามีปุ่มมากกว่า 1 ซ่อนปุ่มหลังสุด (ปุ่มที่ 2 คือ duplicate)
+            if (btns.length > 1) {
+                for (let i = 1; i < btns.length; i++) {
+                    btns[i].style.cssText = 'display:none!important';
+                }
+            }
+        });
+    }
+    // run ทันที + observe DOM changes
+    fix();
+    new MutationObserver(fix).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 """, unsafe_allow_html=True)
 
 face_shape_model, face_mesh = load_models()
