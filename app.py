@@ -348,7 +348,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; }
 </style>
 <div class="dropzone" id="dz">
   <div class="dz-icon">📂</div>
-  <div class="dz-main">ลากไฟล์มาวางที่นี่ หรือ<span>Browse files</span></div>
+  <div class="dz-main"><span>Browse files</span></div>
   <div class="dz-sub">200MB per file · JPG, PNG</div>
   <div class="dz-file" id="fname"></div>
 </div>
