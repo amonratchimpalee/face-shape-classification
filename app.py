@@ -643,4 +643,4 @@ body{{background:transparent;font-family:'DM Sans',sans-serif}}
 
             components.html(card_html, height=820, scrolling=False)
 
-st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>", unsafe_allow_html=True)โ
+st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>", unsafe_allow_html=True)
