@@ -228,14 +228,30 @@ components.html("""
     function dedupe() {
         var zones = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzone"]');
         zones.forEach(function(zone) {
-            var btns = zone.querySelectorAll('button');
-            if (btns.length > 1) {
-                for (var i = 1; i < btns.length; i++) btns[i].remove();
+            var btns = Array.from(zone.querySelectorAll('button'));
+            // Find the visually overlapping "Browse files" buttons by checking bounding rects
+            var browseButtons = btns.filter(function(b) {
+                var txt = b.innerText.trim().toLowerCase();
+                return txt.includes('browse') || txt.includes('upload') || txt === '';
+            });
+            if (browseButtons.length > 1) {
+                // Keep the one with larger area (the styled one), hide others
+                browseButtons.sort(function(a, b) {
+                    var ra = a.getBoundingClientRect();
+                    var rb = b.getBoundingClientRect();
+                    return (rb.width * rb.height) - (ra.width * ra.height);
+                });
+                for (var i = 1; i < browseButtons.length; i++) {
+                    browseButtons[i].style.cssText += ';display:none!important';
+                }
             }
         });
     }
-    dedupe();
-    new MutationObserver(dedupe).observe(window.parent.document.body, { childList: true, subtree: true });
+    setTimeout(dedupe, 100);
+    setTimeout(dedupe, 500);
+    setTimeout(dedupe, 1000);
+    new MutationObserver(function() { setTimeout(dedupe, 50); })
+        .observe(window.parent.document.body, { childList: true, subtree: true });
 })();
 </script>
 """, height=0)
