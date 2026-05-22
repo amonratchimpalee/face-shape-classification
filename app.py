@@ -221,21 +221,24 @@ st.markdown("""
   แสงสว่างเพียงพอ &nbsp;·&nbsp;
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
+""", unsafe_allow_html=True)
+components.html("""
 <script>
-(function removeDuplicateUploadBtn() {
+(function() {
     function dedupe() {
-        document.querySelectorAll('[data-testid="stFileUploaderDropzone"]').forEach(zone => {
-            const btns = zone.querySelectorAll('button');
+        var zones = window.parent.document.querySelectorAll('[data-testid="stFileUploaderDropzone"]');
+        zones.forEach(function(zone) {
+            var btns = zone.querySelectorAll('button');
             if (btns.length > 1) {
-                for (let i = 1; i < btns.length; i++) btns[i].remove();
+                for (var i = 1; i < btns.length; i++) btns[i].remove();
             }
         });
     }
     dedupe();
-    new MutationObserver(dedupe).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(dedupe).observe(window.parent.document.body, { childList: true, subtree: true });
 })();
 </script>
-""", unsafe_allow_html=True)
+""", height=0)
 os.makedirs("saved_results", exist_ok=True)
 
 
