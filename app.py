@@ -170,34 +170,47 @@ html, body, [class*="css"], p, span, div, label, button {
     text-align: center !important;
 }
 
-/* ─── "Browse files" button inside dropzone ─── */
+/* ─── "Browse files" button — ซ่อน text ใน button ทั้งหมดก่อน แล้วใช้ ::after แทน ─── */
 [data-testid="stFileUploaderDropzone"] button,
 [data-testid="stFileUploader"] section button {
     background: rgba(220,150,20,.15) !important;
     border: 1px solid rgba(220,150,20,.45) !important;
     border-radius: 10px !important;
-    color: rgba(255,200,80,.9) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
     padding: .45rem 1.2rem !important;
-    font-size: .85rem !important;
-    font-weight: 500 !important;
+    font-size: 0 !important;
     cursor: pointer !important;
     transition: background .2s !important;
     margin-top: 4px !important;
+    position: relative !important;
+    min-width: 110px !important;
+    min-height: 34px !important;
+}
+/* แสดง label ผ่าน ::after เพื่อกันข้อความซ้อน */
+[data-testid="stFileUploaderDropzone"] button::after,
+[data-testid="stFileUploader"] section button::after {
+    content: "Browse files";
+    font-size: .85rem !important;
+    font-weight: 500 !important;
+    color: rgba(255,200,80,.9) !important;
+    font-family: 'DM Sans', sans-serif !important;
 }
 [data-testid="stFileUploaderDropzone"] button:hover,
 [data-testid="stFileUploader"] section button:hover {
     background: rgba(220,150,20,.28) !important;
     border-color: rgba(220,150,20,.7) !important;
 }
+/* ซ่อน child elements ที่ทำให้ข้อความซ้อน */
 [data-testid="stFileUploaderDropzone"] button *,
 [data-testid="stFileUploader"] section button * {
-    color: rgba(255,200,80,.9) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+    font-size: 0 !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
 }
-
-/* ─── Hide duplicate "X" / second button ─── */
-[data-testid="stFileUploaderDropzone"] button ~ button { display: none !important; }
+/* ─── ซ่อนปุ่มที่ 2 ที่ซ้อนกัน ─── */
+[data-testid="stFileUploaderDropzone"] button ~ button,
+[data-testid="stFileUploader"] section button ~ button {
+    display: none !important;
+}
 
 /* ─── File chip (after upload) ─── */
 [data-testid="stFileChipName"],
