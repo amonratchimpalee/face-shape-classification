@@ -48,10 +48,10 @@ def load_models():
 
 classes = ['Heart', 'Oblong', 'Oval', 'Round', 'Square']
 
-LANDMARK_TRICHION = 10
 LANDMARK_GNATHION = 152
-LANDMARK_ZY_LEFT  = 234
-LANDMARK_ZY_RIGHT = 454
+# zygion — โหนกแก้มจริง ไม่ใช่ขอบหู
+LANDMARK_ZY_LEFT  = 116   # แก้จาก 234 → 116 (โหนกแก้มซ้าย)
+LANDMARK_ZY_RIGHT = 345   # แก้จาก 454 → 345 (โหนกแก้มขวา)
 
 shape_info = {
     'Oval':   {'emoji':'🥚','color':[218,165,32],'gradient':'linear-gradient(135deg,#f7c948,#ffe08a)','accent':'#ffe08a',
@@ -179,7 +179,7 @@ CONSENT_HTML = """
      margin-bottom:.4rem;margin-top:.85rem'>วัตถุประสงค์การประมวลผล</p>
   <p style='color:rgba(255,255,255,.45);font-size:.82rem;line-height:1.9'>
     1️⃣ <b>วิเคราะห์รูปทรงใบหน้า</b> — จำแนก 5 ประเภท (Oval, Square, Round, Heart, Oblong)
-    ด้วยโมเดล ResNet50V2<br>
+    ด้วยโมเดล InceptionResNetV2<br>
     2️⃣ <b>ตรวจจับจุดอ้างอิงใบหน้า</b> — ใช้ MediaPipe คำนวณ Facial Index
     และ Golden Ratio Score<br>
     3️⃣ <b>แสดงผลคำแนะนำ</b> — ทรงผมและแว่นตาที่เหมาะกับรูปทรงใบหน้าของท่าน
@@ -206,7 +206,7 @@ uploaded_file = st.file_uploader("📸  อัปโหลดภาพใบห�
 st.markdown("""
 <div style='font-size:.78rem;color:rgba(255,255,255,.3);margin-top:-.5rem;margin-bottom:1rem;line-height:1.8'>
   ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b style='color:rgba(255,255,255,.5)'>หน้าตรง</b> &nbsp;·&nbsp;
-  แสงสว่างเพียงพอ &nbsp;·&nbsp;&nbsp;·&nbsp;
+  แสงสว่างเพียงพอ &nbsp;·&nbsp; ไม่สวมแว่น &nbsp;·&nbsp;
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
 """, unsafe_allow_html=True)
