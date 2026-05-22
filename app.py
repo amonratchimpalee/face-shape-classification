@@ -310,57 +310,65 @@ if not st.session_state.consent_given:
                     st.rerun()
     st.stop()
 
-# ─── CSS: style native uploader ให้สวย ซ่อน default UI แต่ยัง clickable ───
+# ─── CSS: style native uploader ───
 st.markdown("""
 <style>
 [data-testid="stFileUploader"] { margin-bottom: 0 !important; }
 [data-testid="stFileUploader"] label { display: none !important; }
 
-/* ซ่อน default section แต่ยังให้ input อยู่ */
-[data-testid="stFileUploader"] section {
-    border: none !important; background: transparent !important;
-    padding: 0 !important; margin: 0 !important; min-height: 0 !important;
-}
-[data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
-
-/* ทำให้ปุ่ม Browse files เป็น custom dropzone ทั้งกล่อง */
+[data-testid="stFileUploader"] section,
 [data-testid="stFileUploaderDropzone"] {
-    background: rgba(255,255,255,.03) !important;
-    border: 1.5px dashed rgba(255,255,255,.15) !important;
-    border-radius: 16px !important;
-    min-height: 130px !important;
+    background: rgba(255,255,255,.04) !important;
+    border: 1.5px dashed rgba(255,255,255,.18) !important;
+    border-radius: 18px !important;
+    padding: 1.8rem 1.5rem !important;
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    cursor: pointer !important;
+    gap: 10px !important;
+    min-height: 110px !important;
     transition: border-color .2s, background .2s !important;
-    position: relative !important;
 }
+[data-testid="stFileUploader"] section:hover,
 [data-testid="stFileUploaderDropzone"]:hover {
     border-color: rgba(220,150,20,.6) !important;
     background: rgba(220,150,20,.05) !important;
 }
-/* ซ่อน button ซ้ำ คงไว้แค่ input จริง */
-[data-testid="stFileUploaderDropzone"] button {
-    all: unset !important;
-    position: absolute !important; inset: 0 !important;
-    width: 100% !important; height: 100% !important;
-    cursor: pointer !important; opacity: 0 !important;
-}
-/* ใส่ข้อความผ่าน ::before บน dropzone */
-[data-testid="stFileUploaderDropzone"]::before {
-    content: "📂  แตะหรือลากภาพมาวางที่นี่" !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: .9rem !important;
+[data-testid="stFileUploaderDropzoneInstructions"],
+[data-testid="stFileUploaderDropzoneInstructions"] * {
     color: rgba(255,255,255,.4) !important;
-    pointer-events: none !important;
+    -webkit-text-fill-color: rgba(255,255,255,.4) !important;
+    text-align: center !important;
+}
+[data-testid="stFileUploaderDropzone"] button,
+[data-testid="stFileUploader"] section button {
+    background: rgba(220,150,20,.15) !important;
+    border: 1px solid rgba(220,150,20,.45) !important;
+    border-radius: 10px !important;
+    color: rgba(255,200,80,.9) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+    padding: .4rem 1.1rem !important;
+    font-size: .85rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+}
+[data-testid="stFileUploaderDropzone"] button *,
+[data-testid="stFileUploader"] section button * {
+    color: rgba(255,200,80,.9) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+}
+[data-testid="stFileChipName"],
+[data-testid="stFileChipName"] * {
+    color: rgba(255,255,255,.9) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.9) !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<p style='font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:.4rem'>📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</p>", unsafe_allow_html=True)
 
-# ─── Native file uploader — ทำงานได้ทุก platform รวม iPad ───
+# ─── Native file uploader ───
 uploaded_file = st.file_uploader(
     "upload",
     type=["jpg", "jpeg", "png"],
@@ -375,6 +383,10 @@ if uploaded_file is not None:
 
 show_result = st.session_state.get("show_result", False)
 cached_file = st.session_state.get("cached_file", None)
+
+# ซ่อน uploader เมื่ออยู่ใน result mode
+if show_result:
+    st.markdown("<style>[data-testid='stFileUploader']{display:none!important}</style>", unsafe_allow_html=True)
 
 if not show_result:
     st.markdown("""
@@ -481,12 +493,10 @@ def predict_face_shape(img_pil):
 
 
 if show_result:
-    img_pil = st.session_state.get("cached_file_pil")
-    if img_pil is None and cached_file is not None:
-        img_pil = Image.open(cached_file)
-    if img_pil is None:
+    if cached_file is None:
         st.session_state["show_result"] = False
         st.rerun()
+    img_pil = Image.open(cached_file)
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
@@ -496,7 +506,6 @@ if show_result:
         if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
             st.session_state["show_result"] = False
             st.session_state["cached_file"] = None
-            st.session_state["cached_file_pil"] = None
             st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
             st.rerun()
 
