@@ -282,7 +282,7 @@ def predict_face_shape(img_pil):
         top_y = max(0, min(all_y))
         gn_y  = gn[1]
         face_h_est = gn_y - top_y
-        hairline_y = max(0, top_y - int(face_h_est * 0.12))
+        hairline_y = max(0, top_y - int(face_h_est * 0.28))
         mid_face_x = (zy_l[0] + zy_r[0]) // 2
         tr = (mid_face_x, hairline_y)
 
