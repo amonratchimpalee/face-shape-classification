@@ -310,8 +310,9 @@ uploaded_file = st.file_uploader(
     label_visibility="collapsed",
 )
 
-# ─── Custom dropzone UI + JS to trigger hidden input ───
-components.html("""
+# ─── Custom dropzone UI (แสดงเฉพาะตอนยังไม่มีไฟล์) ───
+if not uploaded_file:
+    components.html("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -409,7 +410,8 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; }
 </script>
 """, height=160)
 
-st.markdown("""
+if not uploaded_file:
+    st.markdown("""
 <div class='upload-hint'>
   ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b>หน้าตรง</b> &nbsp;·&nbsp;
   แสงสว่างเพียงพอ &nbsp;·&nbsp; ไม่สวมแว่น &nbsp;·&nbsp;
