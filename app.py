@@ -15,8 +15,8 @@ def preprocess(x):
     x = tf.cast(x, tf.float32)
     return preprocess_input(x)
 
-MODEL_URL   = "https://drive.google.com/file/d/1KAma7fTc6iMubXFEyLf2fI1ZD7v4b-ha/view?usp=sharing"
-MODEL_LOCAL = "best_ResNet50V2.keras"
+MODEL_URL   = "https://drive.google.com/uc?id=1p3veX7I7_6WBM97jOSfQpSGcxwIuijD1"
+MODEL_LOCAL = "best_inceptionresnetv2_face_shape_fixed.keras"
 
 @st.cache_resource
 def load_models():
@@ -48,12 +48,13 @@ def load_models():
 
 classes = ['Heart', 'Oblong', 'Oval', 'Round', 'Square']
 
+LANDMARK_TRICHION = 10
 LANDMARK_GNATHION = 152
-LANDMARK_ZY_LEFT  = 116
-LANDMARK_ZY_RIGHT = 345
+LANDMARK_ZY_LEFT  = 234
+LANDMARK_ZY_RIGHT = 454
 
 shape_info = {
-    'Oval':   {'emoji':'🥚','color':[218,165,32],'gradient':'linear-gradient(135deg,#f7c948,#ffe08a)','accent':'#f7c948',
+    'Oval':   {'emoji':'🥚','color':[218,165,32],'gradient':'linear-gradient(135deg,#f7c948,#ffe08a)','accent':'#ffe08a',
                'desc':'ใบหน้ารูปไข่',
                'hair':'ผมสั้นถึงกลาง เช่น blunt bob, shoulder-length, pixie cut, long layers และหน้าม้าปัดข้าง',
                'glasses':'ทุกทรงเหมาะกับใบหน้ารูปไข่ แนะนำ rectangle, square และ aviator เพื่อเพิ่มความคมชัด'},
@@ -81,183 +82,71 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
-/* ─── Global background ─── */
-[data-testid="stAppViewContainer"],
-[data-testid="stAppViewContainer"] > div,
-.main, .block-container {
-    background: transparent !important;
-}
-[data-testid="stAppViewContainer"] {
-    background:
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(200,130,0,.22) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(180,80,0,.18) 0%, transparent 60%),
-        #0d0a04 !important;
-    min-height: 100vh;
-}
-[data-testid="stHeader"],
-[data-testid="stToolbar"] { background: transparent !important; }
-[data-testid="stDecoration"] { display: none !important; }
-.main .block-container { padding-top: 2.5rem !important; max-width: 780px; }
-html, body, [class*="css"], p, span, div, label, button {
-    font-family: 'DM Sans', sans-serif !important;
-    color: rgba(255,255,255,.85);
-}
+[data-testid="stAppViewContainer"],[data-testid="stAppViewContainer"]>div,.main,.block-container{background:transparent!important}
+[data-testid="stAppViewContainer"]{
+    background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(200,130,0,.22) 0%,transparent 60%),
+               radial-gradient(ellipse 60% 40% at 80% 110%,rgba(180,80,0,.18) 0%,transparent 60%),
+               #0d0a04!important;min-height:100vh}
+[data-testid="stHeader"],[data-testid="stToolbar"]{background:transparent!important}
+[data-testid="stDecoration"]{display:none!important}
+.main .block-container{padding-top:2.5rem!important;max-width:780px}
+html,body,[class*="css"],p,span,div,label,button{font-family:'DM Sans',sans-serif!important;color:rgba(255,255,255,.85)}
+[data-testid="stFileUploader"] small, [data-testid="stFileUploader"] p,
+[data-testid="stFileUploader"] span, [data-testid="stFileUploader"] div{
+    color:rgba(255,255,255,.85)!important;-webkit-text-fill-color:rgba(255,255,255,.85)!important}
 
-/* ─── Hero ─── */
-.hero-wrap { text-align: center; margin-bottom: 1.8rem; }
-.hero-title {
-    font-family: 'Playfair Display', serif !important;
-    font-size: clamp(2rem, 6vw, 3.2rem);
-    font-weight: 900 !important;
-    background: linear-gradient(135deg, #fff 0%, #ffe8a0 45%, #e8860a 100%);
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    letter-spacing: -.02em;
-    line-height: 1.1;
-    margin-bottom: .4rem;
-}
-.hero-sub {
-    color: rgba(255,255,255,.3) !important;
-    font-size: .85rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    -webkit-text-fill-color: rgba(255,255,255,.3) !important;
-}
-.divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), rgba(220,150,20,.6), rgba(255,255,255,.08), transparent);
-    margin: 0 0 2rem;
-}
+.hero-wrap{text-align:center;margin-bottom:1.8rem}
+.hero-title{font-family:'Playfair Display',serif!important;font-size:clamp(2rem,6vw,3.2rem);font-weight:900!important;
+    background:linear-gradient(135deg,#fff 0%,#ffe8a0 45%,#e8860a 100%);
+    -webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;
+    background-clip:text!important;letter-spacing:-.02em;line-height:1.1;margin-bottom:.4rem}
+.hero-sub{color:rgba(255,255,255,.3)!important;font-size:.85rem;letter-spacing:.12em;
+    text-transform:uppercase;-webkit-text-fill-color:rgba(255,255,255,.3)!important}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),rgba(220,150,20,.6),rgba(255,255,255,.08),transparent);margin:0 0 2rem}
 
-/* ─── File uploader label — ซ่อน ─── */
-[data-testid="stFileUploader"] label,
-[data-testid="stFileUploader"] label * {
-    display: none !important;
-}
-
-/* ─── ซ่อน native uploader wrapper กรอบ ─── */
-[data-testid="stFileUploader"] {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-[data-testid="stFileUploader"] > div,
-[data-testid="stFileUploader"] > div > div {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-}
-
-/* ─── ซ่อน native dropzone ทั้งหมด (ใช้ custom dropzone แทน) ─── */
-[data-testid="stFileUploader"] section,
-[data-testid="stFileUploaderDropzone"],
-[data-testid="stFileUploaderDropzoneInstructions"],
-[data-testid="stFileUploader"] section button,
-[data-testid="stFileUploaderDropzone"] button {
-    display: none !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-}
-
-/* ─── File chip (after upload) ─── */
+[data-testid="stFileUploader"] label,[data-testid="stFileUploader"] label *{
+    color:rgba(255,255,255,.7)!important;-webkit-text-fill-color:rgba(255,255,255,.7)!important;font-size:.95rem!important}
+[data-testid="stFileUploader"] section{
+    background:rgba(255,255,255,.04)!important;
+    border:1.5px dashed rgba(255,255,255,.18)!important;
+    border-radius:18px!important;
+    padding:.75rem 1.2rem!important;
+    position:relative!important}
+[data-testid="stFileUploader"] section:hover{
+    border-color:rgba(220,150,20,.6)!important;
+    background:rgba(220,150,20,.05)!important}
+[data-testid="stFileUploaderDropzoneInstructions"]{
+    color:rgba(255,255,255,.4)!important;-webkit-text-fill-color:rgba(255,255,255,.4)!important}
+[data-testid="stFileUploaderDropzoneInstructions"] span,
+[data-testid="stFileUploaderDropzoneInstructions"] p{
+    color:rgba(255,255,255,.4)!important;-webkit-text-fill-color:rgba(255,255,255,.4)!important}
 [data-testid="stFileChipName"],
-[data-testid="stFileChipName"] * {
-    color: rgba(255,255,255,.9) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.9) !important;
-}
+[data-testid="stFileChipName"] *,
+.st-emotion-cache-1t3cokr{
+    color:rgba(255,255,255,.9)!important;
+    -webkit-text-fill-color:rgba(255,255,255,.9)!important}
+[data-testid="stFileUploader"] section button{
+    background:rgba(255,255,255,.08)!important;
+    border:1px solid rgba(255,255,255,.2)!important;
+    border-radius:8px!important;
+    color:#fff!important;
+    -webkit-text-fill-color:#fff!important}
+[data-testid="stFileUploader"] section button *{
+    color:#fff!important;
+    -webkit-text-fill-color:#fff!important}
+[data-testid="stFileUploaderDropzone"] button~button{
+    display:none!important}
 
-/* ─── Image preview ─── */
-[data-testid="stImage"] img {
-    border-radius: 18px !important;
-    border: 1px solid rgba(255,255,255,.1) !important;
-    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
-}
-
-/* ─── Misc ─── */
-[data-testid="stSpinner"] * { color: rgba(255,255,255,.5) !important; }
-[data-testid="stAlert"] {
-    background: rgba(233,30,99,.1) !important;
-    border: 1px solid rgba(233,30,99,.3) !important;
-    border-radius: 14px !important;
-}
-[data-testid="stAlert"] * { color: #ff6b9d !important; -webkit-text-fill-color: #ff6b9d !important; }
-
-/* ─── Checkbox ─── */
-[data-testid="stCheckbox"] label,
-[data-testid="stCheckbox"] label * {
-    color: rgba(255,255,255,.7) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.7) !important;
-    font-size: .88rem !important;
-}
-[data-testid="stCheckbox"] [data-baseweb="checkbox"] div {
-    border-color: rgba(220,150,20,.5) !important;
-}
-
-/* ─── ปุ่มอัพโหลดใหม่ ─── */
-[data-testid="stButton"] button[kind="secondary"],
-.stButton > button:not([kind="primary"]) {
-    background: rgba(220,150,20,.12) !important;
-    border: 1px solid rgba(220,150,20,.35) !important;
-    border-radius: 10px !important;
-    color: rgba(255,200,80,.8) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.8) !important;
-    font-size: .85rem !important;
-    margin-top: .5rem !important;
-    transition: background .2s !important;
-}
-.stButton > button:not([kind="primary"]):hover {
-    background: rgba(220,150,20,.22) !important;
-    border-color: rgba(220,150,20,.55) !important;
-}
-
-/* ─── Primary button (consent confirm) ─── */
-[data-testid="stButton"] button[kind="primary"],
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #c89600, #f5c842) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    color: #1a0f00 !important;
-    -webkit-text-fill-color: #1a0f00 !important;
-    font-weight: 600 !important;
-    font-size: .92rem !important;
-    padding: .6rem 1.5rem !important;
-    transition: opacity .2s !important;
-}
-[data-testid="stButton"] button[kind="primary"]:hover { opacity: .88 !important; }
-
-/* ─── Footer ─── */
-.footer {
-    text-align: center;
-    padding: 2.5rem 0 1rem;
-    font-size: .75rem;
-    color: rgba(255,255,255,.15) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.15) !important;
-    letter-spacing: .06em;
-}
-.footer b { color: rgba(220,160,20,.6) !important; -webkit-text-fill-color: rgba(220,160,20,.6) !important; }
-
-/* ─── Hint row below uploader ─── */
-.upload-hint {
-    font-size: .78rem;
-    color: rgba(255,255,255,.3) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.3) !important;
-    margin-top: -.4rem;
-    margin-bottom: 1rem;
-    line-height: 1.8;
-}
-.upload-hint b {
-    color: rgba(255,255,255,.5) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.5) !important;
-}
+[data-testid="stImage"] img{border-radius:18px!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:0 20px 60px rgba(0,0,0,.5)!important}
+[data-testid="stSpinner"] *{color:rgba(255,255,255,.5)!important}
+[data-testid="stAlert"]{background:rgba(233,30,99,.1)!important;border:1px solid rgba(233,30,99,.3)!important;border-radius:14px!important}
+[data-testid="stAlert"] *{color:#ff6b9d!important;-webkit-text-fill-color:#ff6b9d!important}
+.footer{text-align:center;padding:2.5rem 0 1rem;font-size:.75rem;color:rgba(255,255,255,.15)!important;
+    -webkit-text-fill-color:rgba(255,255,255,.15)!important;letter-spacing:.06em}
+.footer b{color:rgba(220,160,20,.6)!important;-webkit-text-fill-color:rgba(220,160,20,.6)!important}
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Hero ───
 st.markdown("""
 <div class="hero-wrap">
   <div class="hero-title">✨ Face Shape classification</div>
@@ -268,7 +157,7 @@ st.markdown("""
 
 face_shape_model, face_mesh = load_models()
 
-# ─── Consent Gate ───
+# ---- Consent Gate ----
 if "consent_given" not in st.session_state:
     st.session_state.consent_given = False
 
@@ -277,6 +166,7 @@ CONSENT_HTML = """
      border-radius:18px;padding:1.5rem;margin-bottom:1rem'>
   <p style='color:rgba(220,150,20,.9);font-size:.75rem;text-transform:uppercase;
      letter-spacing:.1em;margin-bottom:.75rem'>🛡️ นโยบายความเป็นส่วนตัว · PDPA</p>
+
   <p style='color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;margin-bottom:.4rem'>
     ข้อมูลที่เราประมวลผล</p>
   <p style='color:rgba(255,255,255,.45);font-size:.82rem;line-height:1.7;margin-bottom:.5rem'>
@@ -284,6 +174,7 @@ CONSENT_HTML = """
     ตาม PDPA มาตรา 26 ประมวลผลในหน่วยความจำชั่วคราวเท่านั้น<br>
     ✓ ไม่บันทึกภาพ &nbsp;·&nbsp; ✓ ไม่แชร์ข้อมูล &nbsp;·&nbsp; ✓ ลบออกหลังวิเคราะห์
   </p>
+
   <p style='color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;
      margin-bottom:.4rem;margin-top:.85rem'>วัตถุประสงค์การประมวลผล</p>
   <p style='color:rgba(255,255,255,.45);font-size:.82rem;line-height:1.9'>
@@ -310,107 +201,15 @@ if not st.session_state.consent_given:
                     st.rerun()
     st.stop()
 
-# ─── CSS: style native uploader ───
+# ---- File Uploader ----
+uploaded_file = st.file_uploader("📸  อัปโหลดภาพใบหน้าของคุณ", type=["jpg","jpeg","png"])
 st.markdown("""
-<style>
-[data-testid="stFileUploader"] { margin-bottom: 0 !important; }
-[data-testid="stFileUploader"] label { display: none !important; }
-
-[data-testid="stFileUploader"] section,
-[data-testid="stFileUploaderDropzone"] {
-    background: rgba(255,255,255,.04) !important;
-    border: 1.5px dashed rgba(255,255,255,.18) !important;
-    border-radius: 18px !important;
-    padding: 1.8rem 1.5rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    min-height: 110px !important;
-    transition: border-color .2s, background .2s !important;
-}
-[data-testid="stFileUploader"] section:hover,
-[data-testid="stFileUploaderDropzone"]:hover {
-    border-color: rgba(220,150,20,.6) !important;
-    background: rgba(220,150,20,.05) !important;
-}
-[data-testid="stFileUploaderDropzoneInstructions"],
-[data-testid="stFileUploaderDropzoneInstructions"] * {
-    color: rgba(255,255,255,.4) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.4) !important;
-    text-align: center !important;
-}
-[data-testid="stFileUploaderDropzone"] button,
-[data-testid="stFileUploader"] section button {
-    background: rgba(220,150,20,.15) !important;
-    border: 1px solid rgba(220,150,20,.45) !important;
-    border-radius: 10px !important;
-    color: rgba(255,200,80,.9) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
-    padding: .4rem 1.1rem !important;
-    font-size: .85rem !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
-}
-[data-testid="stFileUploaderDropzone"] button *,
-[data-testid="stFileUploader"] section button * {
-    color: rgba(255,200,80,.9) !important;
-    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
-}
-[data-testid="stFileChipName"],
-[data-testid="stFileChipName"] * {
-    color: rgba(255,255,255,.9) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.9) !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("<p style='font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:.4rem'>📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</p>", unsafe_allow_html=True)
-
-# ─── Native file uploader ───
-uploaded_file = st.file_uploader(
-    "upload",
-    type=["jpg", "jpeg", "png"],
-    label_visibility="collapsed",
-    key=f"uploader_{st.session_state.get('uploader_key', 0)}",
-)
-
-# ถ้ามีไฟล์ใหม่เข้ามา set flag ให้แสดงผล
-if uploaded_file is not None:
-    st.session_state["show_result"] = True
-    st.session_state["cached_file"] = uploaded_file
-
-show_result = st.session_state.get("show_result", False)
-cached_file = st.session_state.get("cached_file", None)
-
-# กรณีกดปุ่ม reupload: show_result=True แต่ยังไม่มีไฟล์ใหม่
-waiting_new = show_result and cached_file is None
-
-if waiting_new or not show_result:
-    # แสดง uploader ปกติ
-    pass
-else:
-    # ซ่อน uploader เมื่อมีผลแล้ว
-    st.markdown("""
-<style>
-[data-testid="stFileUploader"] {
-    position: absolute !important; width: 1px !important;
-    height: 1px !important; overflow: hidden !important;
-    opacity: 0 !important; pointer-events: none !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-if not show_result or waiting_new:
-    st.markdown("""
-<div class='upload-hint'>
-  ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b>หน้าตรง</b> &nbsp;·&nbsp;
-  แสงสว่างเพียงพอ &nbsp;·&nbsp; ไม่สวมแว่น &nbsp;·&nbsp;
+<div style='font-size:.78rem;color:rgba(255,255,255,.3);margin-top:-.5rem;margin-bottom:1rem;line-height:1.8'>
+  ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b style='color:rgba(255,255,255,.5)'>หน้าตรง</b> &nbsp;·&nbsp;
+  แสงสว่างเพียงพอ &nbsp;·&nbsp;&nbsp;·&nbsp;
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
 """, unsafe_allow_html=True)
-
 os.makedirs("saved_results", exist_ok=True)
 
 
@@ -483,11 +282,12 @@ def predict_face_shape(img_pil):
         top_y = max(0, min(all_y))
         gn_y  = gn[1]
         face_h_est = gn_y - top_y
-        hairline_y = max(0, top_y - int(face_h_est * 0.18))
+        hairline_y = max(0, top_y - int(face_h_est * 0.12))
         mid_face_x = (zy_l[0] + zy_r[0]) // 2
         tr = (mid_face_x, hairline_y)
 
         gn = (max(0, min(gn[0], iw-1)), max(0, min(gn[1], ih-1)))
+
         draw_landmarks_mesh(img_out, tr, gn, zy_l, zy_r, c_bgr)
 
         face_h_meas = abs(gn[1] - tr[1])
@@ -506,20 +306,14 @@ def predict_face_shape(img_pil):
     return face_shape, confidence, ratiog, score, img_out, face_detected
 
 
-if show_result and cached_file is not None:
-    img_pil = Image.open(cached_file)
+if uploaded_file:
+    img_pil = Image.open(uploaded_file)
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
         with st.spinner("🔍 กำลังวิเคราะห์..."):
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
-        # ปุ่ม reupload — clear ไฟล์เก่า แต่คง show_result=True
-        # rerun → waiting_new=True → แสดง uploader → เลือกไฟล์ → วิเคราะห์ทันที
-        if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
-            st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
-            st.session_state["cached_file"] = None
-            st.rerun()
 
     with col2:
         if face_detected == "multiple":
@@ -625,4 +419,5 @@ body{{background:transparent;font-family:'DM Sans',sans-serif}}
 
             components.html(card_html, height=820, scrolling=False)
 
-st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>", unsafe_allow_html=True)
+st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>",
+            unsafe_allow_html=True)
