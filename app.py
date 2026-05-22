@@ -394,7 +394,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
 <div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
 <div class="dropzone" id="dz">
   <div class="dz-icon">📂</div>
-  <div class="dz-main"<span class="dz-btn">Browse files</span></div>
+  <div class="dz-main">ลากไฟล์มาวางที่นี่ หรือ<span class="dz-btn">Browse files</span></div>
   <div class="dz-sub">200MB per file · JPG, PNG</div>
 </div>
 <script>
@@ -543,41 +543,9 @@ if show_result and cached_file is not None:
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
         # ─── ปุ่มอัพโหลดใหม่ ───
-        reupload = components.html("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:transparent;font-family:'DM Sans',sans-serif}
-button{
-    width:100%;padding:.65rem 1rem;
-    background:rgba(220,150,20,.12);
-    border:1px solid rgba(220,150,20,.35);
-    border-radius:10px;
-    color:rgba(255,200,80,.85);
-    font-size:.88rem;font-weight:500;
-    cursor:pointer;transition:background .2s;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-}
-button:hover{background:rgba(220,150,20,.22);border-color:rgba(220,150,20,.55)}
-</style>
-<button id="btn">🔄 &nbsp;อัพโหลดภาพใหม่</button>
-<script>
-document.getElementById('btn').addEventListener('click', function() {
-    // bump key ผ่าน Streamlit component communication
-    window.parent.postMessage({type:'streamlit:setComponentValue', value: Date.now()}, '*');
-    // trigger file input
-    setTimeout(function() {
-        var inp = null;
-        try { inp = window.parent.document.querySelector('[data-testid="stFileUploader"] input[type="file"]'); } catch(e) {}
-        if (!inp) inp = document.querySelector('input[type="file"]');
-        if (inp) inp.click();
-    }, 50);
-});
-</script>
-""", height=52, key="reupload_btn")
-
-        if reupload:
+        if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
             st.session_state["show_result"] = False
+            st.session_state["cached_file"] = None
             st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
             st.rerun()
 
