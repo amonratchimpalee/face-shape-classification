@@ -310,16 +310,57 @@ if not st.session_state.consent_given:
                     st.rerun()
     st.stop()
 
-# ─── ซ่อน native file uploader wrapper ─── 
+# ─── CSS: style native uploader ให้สวย ซ่อน default UI แต่ยัง clickable ───
 st.markdown("""
 <style>
-[data-testid="stFileUploader"] {
-    display: none !important;
+[data-testid="stFileUploader"] { margin-bottom: 0 !important; }
+[data-testid="stFileUploader"] label { display: none !important; }
+
+/* ซ่อน default section แต่ยังให้ input อยู่ */
+[data-testid="stFileUploader"] section {
+    border: none !important; background: transparent !important;
+    padding: 0 !important; margin: 0 !important; min-height: 0 !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+
+/* ทำให้ปุ่ม Browse files เป็น custom dropzone ทั้งกล่อง */
+[data-testid="stFileUploaderDropzone"] {
+    background: rgba(255,255,255,.03) !important;
+    border: 1.5px dashed rgba(255,255,255,.15) !important;
+    border-radius: 16px !important;
+    min-height: 130px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: border-color .2s, background .2s !important;
+    position: relative !important;
+}
+[data-testid="stFileUploaderDropzone"]:hover {
+    border-color: rgba(220,150,20,.6) !important;
+    background: rgba(220,150,20,.05) !important;
+}
+/* ซ่อน button ซ้ำ คงไว้แค่ input จริง */
+[data-testid="stFileUploaderDropzone"] button {
+    all: unset !important;
+    position: absolute !important; inset: 0 !important;
+    width: 100% !important; height: 100% !important;
+    cursor: pointer !important; opacity: 0 !important;
+}
+/* ใส่ข้อความผ่าน ::before บน dropzone */
+[data-testid="stFileUploaderDropzone"]::before {
+    content: "📂  แตะหรือลากภาพมาวางที่นี่" !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: .9rem !important;
+    color: rgba(255,255,255,.4) !important;
+    pointer-events: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ─── File Uploader (hidden native — keeps Streamlit file handling) ───
+st.markdown("<p style='font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:.4rem'>📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</p>", unsafe_allow_html=True)
+
+# ─── Native file uploader — ทำงานได้ทุก platform รวม iPad ───
 uploaded_file = st.file_uploader(
     "upload",
     type=["jpg", "jpeg", "png"],
@@ -331,130 +372,9 @@ uploaded_file = st.file_uploader(
 if uploaded_file is not None:
     st.session_state["show_result"] = True
     st.session_state["cached_file"] = uploaded_file
-    st.session_state["waiting_reupload"] = False
 
 show_result = st.session_state.get("show_result", False)
 cached_file = st.session_state.get("cached_file", None)
-
-DROPZONE_HTML = """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:transparent;font-family:'DM Sans',sans-serif;width:100%}}
-.label{{font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:.6rem;display:flex;align-items:center;gap:6px}}
-.dropzone{{
-    border:1.5px dashed rgba(255,255,255,.15);border-radius:16px;
-    background:rgba(255,255,255,.03);padding:2rem 1.5rem;
-    text-align:center;cursor:pointer;transition:border-color .2s,background .2s;
-    user-select:none;width:100%;position:relative;overflow:hidden;
-}}
-.dropzone:hover,.dropzone.over{{border-color:rgba(220,150,20,.6);background:rgba(220,150,20,.05)}}
-.dz-icon{{font-size:1.8rem;margin-bottom:.5rem;opacity:.6}}
-.dz-main{{font-size:.9rem;color:rgba(255,255,255,.45);margin-bottom:.3rem}}
-.dz-btn{{
-    display:inline-block;color:rgba(255,200,80,.9);font-weight:500;
-    border:1px solid rgba(220,150,20,.45);border-radius:8px;
-    padding:.22rem .7rem;background:rgba(220,150,20,.12);margin-left:.3rem;font-size:.88rem
-}}
-.dz-sub{{font-size:.75rem;color:rgba(255,255,255,.2);margin-top:.25rem}}
-/* file input ซ่อนแต่คลุม dropzone ทั้งหมด — iPad จะ trigger ได้ */
-#real-input{{
-    position:absolute;inset:0;width:100%;height:100%;
-    opacity:0;cursor:pointer;font-size:0;
-}}
-</style>
-<div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
-<div class="dropzone" id="dz">
-  <input type="file" id="real-input" accept="image/jpeg,image/png" />
-  <div class="dz-icon">📂</div>
-  <div class="dz-main">แตะหรือลากไฟล์มาวางที่นี่ หรือ<span class="dz-btn">Browse files</span></div>
-  <div class="dz-sub">JPG, PNG</div>
-</div>
-<script>
-(function(){{
-    var inp = document.getElementById('real-input');
-    inp.addEventListener('change', function(){{
-        if (!inp.files || !inp.files[0]) return;
-        var file = inp.files[0];
-        var reader = new FileReader();
-        reader.onload = function(e){{
-            var b64 = e.target.result; // data:image/jpeg;base64,...
-            window.parent.postMessage({{
-                type: 'streamlit:setComponentValue',
-                value: b64
-            }}, '*');
-        }};
-        reader.readAsDataURL(file);
-    }});
-    // drag & drop (desktop)
-    var dz = document.getElementById('dz');
-    dz.addEventListener('dragover', function(e){{ e.preventDefault(); dz.classList.add('over'); }});
-    dz.addEventListener('dragleave', function(){{ dz.classList.remove('over'); }});
-    dz.addEventListener('drop', function(e){{
-        e.preventDefault(); dz.classList.remove('over');
-        if (e.dataTransfer.files[0]) {{
-            var dt = new DataTransfer();
-            dt.items.add(e.dataTransfer.files[0]);
-            inp.files = dt.files;
-            inp.dispatchEvent(new Event('change'));
-        }}
-    }});
-}})();
-</script>
-"""
-
-REUPLOAD_BTN_HTML = """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:transparent;font-family:'DM Sans',sans-serif;width:100%}
-.wrap{position:relative;width:100%}
-button{
-    width:100%;padding:.65rem 1rem;
-    background:rgba(220,150,20,.12);
-    border:1px solid rgba(220,150,20,.35);
-    border-radius:10px;
-    color:rgba(255,200,80,.85);
-    font-size:.88rem;font-weight:500;
-    cursor:pointer;transition:background .2s;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-}
-button:hover{background:rgba(220,150,20,.22);border-color:rgba(220,150,20,.55)}
-#real-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;}
-</style>
-<div class="wrap">
-  <input type="file" id="real-input" accept="image/jpeg,image/png" />
-  <button>🔄 &nbsp;อัพโหลดภาพใหม่</button>
-</div>
-<script>
-(function(){
-    var inp = document.getElementById('real-input');
-    inp.addEventListener('change', function(){
-        if (!inp.files || !inp.files[0]) return;
-        var reader = new FileReader();
-        reader.onload = function(e){
-            window.parent.postMessage({
-                type: 'streamlit:setComponentValue',
-                value: e.target.result
-            }, '*');
-        };
-        reader.readAsDataURL(inp.files[0]);
-    });
-})();
-</script>
-"""
-
-# ─── Custom dropzone (iPad-safe: real input inside iframe) ───
-if not show_result:
-    img_b64 = components.html(DROPZONE_HTML, height=170, scrolling=False)
-    if img_b64:
-        import base64, io
-        header, data = img_b64.split(',', 1)
-        img_bytes = base64.b64decode(data)
-        pil_img = Image.open(io.BytesIO(img_bytes))
-        st.session_state["show_result"] = True
-        st.session_state["cached_file_pil"] = pil_img
-        st.rerun()
 
 if not show_result:
     st.markdown("""
@@ -561,9 +481,9 @@ def predict_face_shape(img_pil):
 
 
 if show_result:
-    img_pil = st.session_state.get("cached_file_pil") or (
-        Image.open(cached_file) if cached_file else None
-    )
+    img_pil = st.session_state.get("cached_file_pil")
+    if img_pil is None and cached_file is not None:
+        img_pil = Image.open(cached_file)
     if img_pil is None:
         st.session_state["show_result"] = False
         st.rerun()
@@ -573,15 +493,11 @@ if show_result:
         with st.spinner("🔍 กำลังวิเคราะห์..."):
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
-        # ─── ปุ่มอัพโหลดใหม่ (iPad-safe: real input inside iframe) ───
-        img_b64_new = components.html(REUPLOAD_BTN_HTML, height=52, scrolling=False)
-        if img_b64_new:
-            import base64, io
-            header, data = img_b64_new.split(',', 1)
-            img_bytes = base64.b64decode(data)
-            new_pil = Image.open(io.BytesIO(img_bytes))
-            st.session_state["cached_file_pil"] = new_pil
+        if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
+            st.session_state["show_result"] = False
             st.session_state["cached_file"] = None
+            st.session_state["cached_file_pil"] = None
+            st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
             st.rerun()
 
     with col2:
