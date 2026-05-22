@@ -170,54 +170,29 @@ html, body, [class*="css"], p, span, div, label, button {
     text-align: center !important;
 }
 
-/* ─── "Browse files" button — ซ่อน text ใน button ทั้งหมดก่อน แล้วใช้ ::after แทน ─── */
+/* ─── "Browse files" button ─── */
 [data-testid="stFileUploaderDropzone"] button,
 [data-testid="stFileUploader"] section button {
     background: rgba(220,150,20,.15) !important;
     border: 1px solid rgba(220,150,20,.45) !important;
     border-radius: 10px !important;
-    padding: .45rem 1.2rem !important;
-    font-size: 0 !important;
-    cursor: pointer !important;
-    transition: background .2s !important;
-    margin-top: 4px !important;
-    position: relative !important;
-    min-width: 110px !important;
-    min-height: 34px !important;
-}
-/* แสดง label ผ่าน ::after เพื่อกันข้อความซ้อน */
-[data-testid="stFileUploaderDropzone"] button::after,
-[data-testid="stFileUploader"] section button::after {
-    content: "Browse files";
+    color: rgba(255,200,80,.9) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
+    padding: .4rem 1.1rem !important;
     font-size: .85rem !important;
     font-weight: 500 !important;
-    color: rgba(255,200,80,.9) !important;
-    font-family: 'DM Sans', sans-serif !important;
+    cursor: pointer !important;
+    transition: background .2s !important;
 }
 [data-testid="stFileUploaderDropzone"] button:hover,
 [data-testid="stFileUploader"] section button:hover {
     background: rgba(220,150,20,.28) !important;
     border-color: rgba(220,150,20,.7) !important;
 }
-/* ซ่อน child elements ที่ทำให้ข้อความซ้อน */
 [data-testid="stFileUploaderDropzone"] button *,
 [data-testid="stFileUploader"] section button * {
-    font-size: 0 !important;
-    color: transparent !important;
-    -webkit-text-fill-color: transparent !important;
-}
-/* ─── ซ่อนปุ่ม "Browse files" ที่ 2 ซึ่งอยู่นอก section (เป็น sibling ของ section) ─── */
-[data-testid="stFileUploaderDropzone"] button ~ button,
-[data-testid="stFileUploader"] section button ~ button,
-[data-testid="stFileUploader"] section ~ button,
-[data-testid="stFileUploaderDropzone"] ~ button {
-    display: none !important;
-    visibility: hidden !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    position: absolute !important;
-    pointer-events: none !important;
+    color: rgba(255,200,80,.9) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.9) !important;
 }
 
 /* ─── File chip (after upload) ─── */
@@ -308,16 +283,18 @@ st.markdown("""
     function fix() {
         const uploaders = document.querySelectorAll('[data-testid="stFileUploader"]');
         uploaders.forEach(function(uploader) {
-            const btns = uploader.querySelectorAll('button');
-            // ถ้ามีปุ่มมากกว่า 1 ซ่อนปุ่มหลังสุด (ปุ่มที่ 2 คือ duplicate)
-            if (btns.length > 1) {
-                for (let i = 1; i < btns.length; i++) {
-                    btns[i].style.cssText = 'display:none!important';
+            // ปุ่มทั้งหมดใน uploader
+            const allBtns = uploader.querySelectorAll('button');
+            allBtns.forEach(function(btn) {
+                // ถ้าปุ่มนี้ไม่ได้อยู่ใน section/dropzone → ซ่อน
+                const inDropzone = btn.closest('section') ||
+                                   btn.closest('[data-testid="stFileUploaderDropzone"]');
+                if (!inDropzone) {
+                    btn.style.setProperty('display', 'none', 'important');
                 }
-            }
+            });
         });
     }
-    // run ทันที + observe DOM changes
     fix();
     new MutationObserver(fix).observe(document.body, { childList: true, subtree: true });
 })();
