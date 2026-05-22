@@ -345,9 +345,22 @@ uploaded_file = st.file_uploader(
 if uploaded_file is not None:
     st.session_state["show_result"] = True
     st.session_state["cached_file"] = uploaded_file
+    st.session_state["waiting_reupload"] = False
 
 show_result = st.session_state.get("show_result", False)
 cached_file = st.session_state.get("cached_file", None)
+
+# ─── เมื่อกดปุ่ม reupload แล้ว auto-open file dialog ───
+if st.session_state.get("waiting_reupload", False):
+    components.html("""
+<script>
+setTimeout(function() {
+    var inp = null;
+    try { inp = window.parent.document.querySelector('[data-testid="stFileUploader"] input[type="file"]'); } catch(e) {}
+    if (inp) inp.click();
+}, 400);
+</script>
+""", height=0, scrolling=False)
 
 # ─── Custom dropzone UI (แสดงเฉพาะตอนไม่อยู่ใน result mode) ───
 if not show_result:
@@ -395,7 +408,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
 <div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
 <div class="dropzone" id="dz">
   <div class="dz-icon">📂</div>
-  <div class="dz-main"><span class="dz-btn">Browse files</span></div>
+  <div class="dz-main">ลากไฟล์มาวางที่นี่ หรือ<span class="dz-btn">Browse files</span></div>
   <div class="dz-sub">200MB per file · JPG, PNG</div>
 </div>
 <script>
@@ -545,9 +558,8 @@ if show_result and cached_file is not None:
         st.image(img_out, use_container_width=True)
         # ─── ปุ่มอัพโหลดใหม่ ───
         if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
-            st.session_state["show_result"] = False
-            st.session_state["cached_file"] = None
             st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
+            st.session_state["waiting_reupload"] = True
             st.rerun()
 
     with col2:
