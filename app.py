@@ -333,7 +333,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ─── File Uploader (hidden native) ───
+# ─── File Uploader (hidden native — always rendered) ───
 uploaded_file = st.file_uploader(
     "upload",
     type=["jpg", "jpeg", "png"],
@@ -341,8 +341,16 @@ uploaded_file = st.file_uploader(
     key=f"uploader_{st.session_state.get('uploader_key', 0)}",
 )
 
-# ─── Custom dropzone UI (แสดงเฉพาะตอนยังไม่มีไฟล์) ───
-if not uploaded_file:
+# ถ้ามีไฟล์ใหม่เข้ามา set flag ให้แสดงผล
+if uploaded_file is not None:
+    st.session_state["show_result"] = True
+    st.session_state["cached_file"] = uploaded_file
+
+show_result = st.session_state.get("show_result", False)
+cached_file = st.session_state.get("cached_file", None)
+
+# ─── Custom dropzone UI (แสดงเฉพาะตอนไม่อยู่ใน result mode) ───
+if not show_result:
     components.html("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
@@ -386,7 +394,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
 <div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
 <div class="dropzone" id="dz">
   <div class="dz-icon">📂</div>
-  <div class="dz-main">ลากไฟล์มาวางที่นี่ หรือ<span class="dz-btn">Browse files</span></div>
+  <div class="dz-main"<span class="dz-btn">Browse files</span></div>
   <div class="dz-sub">200MB per file · JPG, PNG</div>
 </div>
 <script>
@@ -422,7 +430,7 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; 
 </script>
 """, height=170)
 
-if not uploaded_file:
+if not show_result:
     st.markdown("""
 <div class='upload-hint'>
   ℹ️ เพื่อผลลัพธ์ที่แม่นยำ: ใช้ภาพ <b>หน้าตรง</b> &nbsp;·&nbsp;
@@ -526,16 +534,16 @@ def predict_face_shape(img_pil):
     return face_shape, confidence, ratiog, score, img_out, face_detected
 
 
-if uploaded_file:
-    img_pil = Image.open(uploaded_file)
+if show_result and cached_file is not None:
+    img_pil = Image.open(cached_file)
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
         with st.spinner("🔍 กำลังวิเคราะห์..."):
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
-        # ─── ปุ่มอัพโหลดใหม่ — trigger hidden input โดยตรง ───
-        components.html("""
+        # ─── ปุ่มอัพโหลดใหม่ ───
+        reupload = components.html("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -555,13 +563,23 @@ button:hover{background:rgba(220,150,20,.22);border-color:rgba(220,150,20,.55)}
 <button id="btn">🔄 &nbsp;อัพโหลดภาพใหม่</button>
 <script>
 document.getElementById('btn').addEventListener('click', function() {
-    var inp = null;
-    try { inp = window.parent.document.querySelector('[data-testid="stFileUploader"] input[type="file"]'); } catch(e) {}
-    if (!inp) { inp = document.querySelector('input[type="file"]'); }
-    if (inp) inp.click();
+    // bump key ผ่าน Streamlit component communication
+    window.parent.postMessage({type:'streamlit:setComponentValue', value: Date.now()}, '*');
+    // trigger file input
+    setTimeout(function() {
+        var inp = null;
+        try { inp = window.parent.document.querySelector('[data-testid="stFileUploader"] input[type="file"]'); } catch(e) {}
+        if (!inp) inp = document.querySelector('input[type="file"]');
+        if (inp) inp.click();
+    }, 50);
 });
 </script>
-""", height=52)
+""", height=52, key="reupload_btn")
+
+        if reupload:
+            st.session_state["show_result"] = False
+            st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
+            st.rerun()
 
     with col2:
         if face_detected == "multiple":
