@@ -271,33 +271,13 @@ html, body, [class*="css"], p, span, div, label, button {
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Hero + JS fix for duplicate Browse files button ───
+# ─── Hero ───
 st.markdown("""
 <div class="hero-wrap">
   <div class="hero-title">✨ Face Shape classification</div>
   <div class="hero-sub">วิเคราะห์รูปใบหน้าและแนะนำทรงผมพร้อมแว่นตาที่เหมาะสม</div>
 </div>
 <div class="divider"></div>
-<script>
-(function fixUploadBtn() {
-    function fix() {
-        document.querySelectorAll('[data-testid="stFileUploader"] section button, [data-testid="stFileUploaderDropzone"] button').forEach(function(btn) {
-            // ถ้า textContent มีคำว่า upload/Upload ซ้ำ หรือยาวผิดปกติ ให้ replace
-            var txt = btn.textContent || '';
-            if (txt.length > 20 || (txt.toLowerCase().match(/upload/g) || []).length > 1) {
-                // ลบ child nodes ทั้งหมด แล้วใส่ข้อความใหม่
-                while (btn.firstChild) btn.removeChild(btn.firstChild);
-                var span = document.createElement('span');
-                span.textContent = 'Browse files';
-                span.style.cssText = 'font-size:.85rem;font-weight:500;color:rgba(255,200,80,.9);-webkit-text-fill-color:rgba(255,200,80,.9);font-family:DM Sans,sans-serif;';
-                btn.appendChild(span);
-            }
-        });
-    }
-    fix();
-    new MutationObserver(fix).observe(document.body, { childList: true, subtree: true });
-})();
-</script>
 """, unsafe_allow_html=True)
 
 face_shape_model, face_mesh = load_models()
@@ -357,6 +337,43 @@ st.markdown("""
   มองเห็นใบหน้าครบตั้งแต่หน้าผากถึงคาง
 </div>
 """, unsafe_allow_html=True)
+
+# ─── JS: fix duplicate "Browse files" button via window.parent ───
+components.html("""
+<script>
+(function() {
+    function fixBtn(doc) {
+        var uploaders = doc.querySelectorAll('[data-testid="stFileUploader"]');
+        uploaders.forEach(function(uploader) {
+            var btns = uploader.querySelectorAll('button');
+            if (btns.length < 2) return;
+            // เก็บปุ่มแรกไว้ ซ่อนที่เหลือ
+            for (var i = 1; i < btns.length; i++) {
+                btns[i].style.setProperty('display', 'none', 'important');
+            }
+            // ตรวจข้อความซ้ำในปุ่มแรก
+            var btn = btns[0];
+            var spans = btn.querySelectorAll('span, p');
+            if (spans.length > 1) {
+                for (var j = 1; j < spans.length; j++) {
+                    spans[j].style.setProperty('display', 'none', 'important');
+                }
+            }
+        });
+    }
+    function run() {
+        try { fixBtn(window.parent.document); } catch(e) {}
+        try { fixBtn(document); } catch(e) {}
+    }
+    run();
+    try {
+        new MutationObserver(run).observe(window.parent.document.body, {childList:true, subtree:true});
+    } catch(e) {
+        new MutationObserver(run).observe(document.body, {childList:true, subtree:true});
+    }
+})();
+</script>
+""", height=0)
 
 os.makedirs("saved_results", exist_ok=True)
 
