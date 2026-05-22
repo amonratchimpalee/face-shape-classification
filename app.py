@@ -310,30 +310,16 @@ if not st.session_state.consent_given:
                     st.rerun()
     st.stop()
 
-# ─── ซ่อน native file uploader widget ด้วย CSS แล้วใช้ label trick trigger มัน ───
+# ─── ซ่อน native file uploader wrapper ─── 
 st.markdown("""
 <style>
 [data-testid="stFileUploader"] {
-    position: relative !important;
-}
-[data-testid="stFileUploader"] section,
-[data-testid="stFileUploaderDropzone"] {
-    opacity: 0 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    position: absolute !important;
-    pointer-events: none !important;
-}
-[data-testid="stFileUploader"] label {
     display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ─── File Uploader (hidden native — always rendered) ───
+# ─── File Uploader (hidden native — keeps Streamlit file handling) ───
 uploaded_file = st.file_uploader(
     "upload",
     type=["jpg", "jpeg", "png"],
@@ -350,99 +336,125 @@ if uploaded_file is not None:
 show_result = st.session_state.get("show_result", False)
 cached_file = st.session_state.get("cached_file", None)
 
-# ─── เมื่อกดปุ่ม reupload แล้ว auto-open file dialog ───
-if st.session_state.get("waiting_reupload", False):
-    components.html("""
-<script>
-setTimeout(function() {
-    var inp = null;
-    try { inp = window.parent.document.querySelector('[data-testid="stFileUploader"] input[type="file"]'); } catch(e) {}
-    if (inp) inp.click();
-}, 400);
-</script>
-""", height=0, scrolling=False)
-
-# ─── Custom dropzone UI (แสดงเฉพาะตอนไม่อยู่ใน result mode) ───
-if not show_result:
-    components.html("""
+DROPZONE_HTML = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; width: 100%; }
-.label {
-    font-size: .95rem;
-    color: rgba(255,255,255,.65);
-    margin-bottom: .6rem;
-    display: flex; align-items: center; gap: 6px;
-}
-.dropzone {
-    border: 1.5px dashed rgba(255,255,255,.15);
-    border-radius: 16px;
-    background: rgba(255,255,255,.03);
-    padding: 2rem 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .2s, background .2s;
-    user-select: none;
-    width: 100%;
-}
-.dropzone:hover, .dropzone.over {
-    border-color: rgba(220,150,20,.6);
-    background: rgba(220,150,20,.05);
-}
-.dz-icon { font-size: 1.8rem; margin-bottom: .5rem; opacity: .6; }
-.dz-main { font-size: .9rem; color: rgba(255,255,255,.45); margin-bottom: .3rem; }
-.dz-btn {
-    display: inline-block;
-    color: rgba(255,200,80,.9);
-    font-weight: 500;
-    border: 1px solid rgba(220,150,20,.45);
-    border-radius: 8px;
-    padding: .22rem .7rem;
-    background: rgba(220,150,20,.12);
-    margin-left: .3rem;
-    font-size: .88rem;
-}
-.dz-sub { font-size: .75rem; color: rgba(255,255,255,.2); margin-top: .25rem; }
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:transparent;font-family:'DM Sans',sans-serif;width:100%}}
+.label{{font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:.6rem;display:flex;align-items:center;gap:6px}}
+.dropzone{{
+    border:1.5px dashed rgba(255,255,255,.15);border-radius:16px;
+    background:rgba(255,255,255,.03);padding:2rem 1.5rem;
+    text-align:center;cursor:pointer;transition:border-color .2s,background .2s;
+    user-select:none;width:100%;position:relative;overflow:hidden;
+}}
+.dropzone:hover,.dropzone.over{{border-color:rgba(220,150,20,.6);background:rgba(220,150,20,.05)}}
+.dz-icon{{font-size:1.8rem;margin-bottom:.5rem;opacity:.6}}
+.dz-main{{font-size:.9rem;color:rgba(255,255,255,.45);margin-bottom:.3rem}}
+.dz-btn{{
+    display:inline-block;color:rgba(255,200,80,.9);font-weight:500;
+    border:1px solid rgba(220,150,20,.45);border-radius:8px;
+    padding:.22rem .7rem;background:rgba(220,150,20,.12);margin-left:.3rem;font-size:.88rem
+}}
+.dz-sub{{font-size:.75rem;color:rgba(255,255,255,.2);margin-top:.25rem}}
+/* file input ซ่อนแต่คลุม dropzone ทั้งหมด — iPad จะ trigger ได้ */
+#real-input{{
+    position:absolute;inset:0;width:100%;height:100%;
+    opacity:0;cursor:pointer;font-size:0;
+}}
 </style>
 <div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
 <div class="dropzone" id="dz">
+  <input type="file" id="real-input" accept="image/jpeg,image/png" />
   <div class="dz-icon">📂</div>
-  <div class="dz-main"><span class="dz-btn">Browse files</span></div>
-  <div class="dz-sub">200MB per file · JPG, PNG</div>
+  <div class="dz-main">แตะหรือลากไฟล์มาวางที่นี่ หรือ<span class="dz-btn">Browse files</span></div>
+  <div class="dz-sub">JPG, PNG</div>
 </div>
 <script>
-(function() {
+(function(){{
+    var inp = document.getElementById('real-input');
+    inp.addEventListener('change', function(){{
+        if (!inp.files || !inp.files[0]) return;
+        var file = inp.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e){{
+            var b64 = e.target.result; // data:image/jpeg;base64,...
+            window.parent.postMessage({{
+                type: 'streamlit:setComponentValue',
+                value: b64
+            }}, '*');
+        }};
+        reader.readAsDataURL(file);
+    }});
+    // drag & drop (desktop)
     var dz = document.getElementById('dz');
-    function getInput(doc) {
-        return doc.querySelector('[data-testid="stFileUploader"] input[type="file"]');
-    }
-    function triggerUpload() {
-        var inp = null;
-        try { inp = getInput(window.parent.document); } catch(e) {}
-        if (!inp) { try { inp = getInput(document); } catch(e) {} }
-        if (inp) inp.click();
-    }
-    dz.addEventListener('click', triggerUpload);
-    dz.addEventListener('dragover', function(e) {
-        e.preventDefault(); dz.classList.add('over');
-    });
-    dz.addEventListener('dragleave', function() { dz.classList.remove('over'); });
-    dz.addEventListener('drop', function(e) {
+    dz.addEventListener('dragover', function(e){{ e.preventDefault(); dz.classList.add('over'); }});
+    dz.addEventListener('dragleave', function(){{ dz.classList.remove('over'); }});
+    dz.addEventListener('drop', function(e){{
         e.preventDefault(); dz.classList.remove('over');
-        var inp = null;
-        try { inp = getInput(window.parent.document); } catch(e) {}
-        if (!inp) { try { inp = getInput(document); } catch(e) {} }
-        if (inp && e.dataTransfer.files.length) {
+        if (e.dataTransfer.files[0]) {{
             var dt = new DataTransfer();
             dt.items.add(e.dataTransfer.files[0]);
             inp.files = dt.files;
-            inp.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+            inp.dispatchEvent(new Event('change'));
+        }}
+    }});
+}})();
+</script>
+"""
+
+REUPLOAD_BTN_HTML = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:'DM Sans',sans-serif;width:100%}
+.wrap{position:relative;width:100%}
+button{
+    width:100%;padding:.65rem 1rem;
+    background:rgba(220,150,20,.12);
+    border:1px solid rgba(220,150,20,.35);
+    border-radius:10px;
+    color:rgba(255,200,80,.85);
+    font-size:.88rem;font-weight:500;
+    cursor:pointer;transition:background .2s;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+}
+button:hover{background:rgba(220,150,20,.22);border-color:rgba(220,150,20,.55)}
+#real-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;}
+</style>
+<div class="wrap">
+  <input type="file" id="real-input" accept="image/jpeg,image/png" />
+  <button>🔄 &nbsp;อัพโหลดภาพใหม่</button>
+</div>
+<script>
+(function(){
+    var inp = document.getElementById('real-input');
+    inp.addEventListener('change', function(){
+        if (!inp.files || !inp.files[0]) return;
+        var reader = new FileReader();
+        reader.onload = function(e){
+            window.parent.postMessage({
+                type: 'streamlit:setComponentValue',
+                value: e.target.result
+            }, '*');
+        };
+        reader.readAsDataURL(inp.files[0]);
     });
 })();
 </script>
-""", height=170, scrolling=False)
+"""
+
+# ─── Custom dropzone (iPad-safe: real input inside iframe) ───
+if not show_result:
+    img_b64 = components.html(DROPZONE_HTML, height=170, scrolling=False)
+    if img_b64:
+        import base64, io
+        header, data = img_b64.split(',', 1)
+        img_bytes = base64.b64decode(data)
+        pil_img = Image.open(io.BytesIO(img_bytes))
+        st.session_state["show_result"] = True
+        st.session_state["cached_file_pil"] = pil_img
+        st.rerun()
 
 if not show_result:
     st.markdown("""
@@ -548,18 +560,28 @@ def predict_face_shape(img_pil):
     return face_shape, confidence, ratiog, score, img_out, face_detected
 
 
-if show_result and cached_file is not None:
-    img_pil = Image.open(cached_file)
+if show_result:
+    img_pil = st.session_state.get("cached_file_pil") or (
+        Image.open(cached_file) if cached_file else None
+    )
+    if img_pil is None:
+        st.session_state["show_result"] = False
+        st.rerun()
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
         with st.spinner("🔍 กำลังวิเคราะห์..."):
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
-        # ─── ปุ่มอัพโหลดใหม่ ───
-        if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True):
-            st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
-            st.session_state["waiting_reupload"] = True
+        # ─── ปุ่มอัพโหลดใหม่ (iPad-safe: real input inside iframe) ───
+        img_b64_new = components.html(REUPLOAD_BTN_HTML, height=52, scrolling=False)
+        if img_b64_new:
+            import base64, io
+            header, data = img_b64_new.split(',', 1)
+            img_bytes = base64.b64decode(data)
+            new_pil = Image.open(io.BytesIO(img_bytes))
+            st.session_state["cached_file_pil"] = new_pil
+            st.session_state["cached_file"] = None
             st.rerun()
 
     with col2:
