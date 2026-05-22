@@ -279,20 +279,19 @@ st.markdown("""
 </div>
 <div class="divider"></div>
 <script>
-(function hideDupeUploadBtn() {
+(function fixUploadBtn() {
     function fix() {
-        const uploaders = document.querySelectorAll('[data-testid="stFileUploader"]');
-        uploaders.forEach(function(uploader) {
-            // ปุ่มทั้งหมดใน uploader
-            const allBtns = uploader.querySelectorAll('button');
-            allBtns.forEach(function(btn) {
-                // ถ้าปุ่มนี้ไม่ได้อยู่ใน section/dropzone → ซ่อน
-                const inDropzone = btn.closest('section') ||
-                                   btn.closest('[data-testid="stFileUploaderDropzone"]');
-                if (!inDropzone) {
-                    btn.style.setProperty('display', 'none', 'important');
-                }
-            });
+        document.querySelectorAll('[data-testid="stFileUploader"] section button, [data-testid="stFileUploaderDropzone"] button').forEach(function(btn) {
+            // ถ้า textContent มีคำว่า upload/Upload ซ้ำ หรือยาวผิดปกติ ให้ replace
+            var txt = btn.textContent || '';
+            if (txt.length > 20 || (txt.toLowerCase().match(/upload/g) || []).length > 1) {
+                // ลบ child nodes ทั้งหมด แล้วใส่ข้อความใหม่
+                while (btn.firstChild) btn.removeChild(btn.firstChild);
+                var span = document.createElement('span');
+                span.textContent = 'Browse files';
+                span.style.cssText = 'font-size:.85rem;font-weight:500;color:rgba(255,200,80,.9);-webkit-text-fill-color:rgba(255,200,80,.9);font-family:DM Sans,sans-serif;';
+                btn.appendChild(span);
+            }
         });
     }
     fix();
