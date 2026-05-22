@@ -130,12 +130,23 @@ html,body,[class*="css"],p,span,div,label,button{font-family:'DM Sans',sans-seri
     border:1px solid rgba(255,255,255,.2)!important;
     border-radius:8px!important;
     color:#fff!important;
-    -webkit-text-fill-color:#fff!important}
+    -webkit-text-fill-color:#fff!important;
+    position:relative!important;
+    z-index:1!important}
 [data-testid="stFileUploader"] section button *{
     color:#fff!important;
     -webkit-text-fill-color:#fff!important}
-[data-testid="stFileUploaderDropzone"] button~button{
+[data-testid="stFileUploaderDropzone"] button~button,
+[data-testid="stFileUploaderDropzone"] button+button,
+[data-testid="stFileUploaderDropzoneInstructions"]~div button,
+[data-testid="stFileUploader"] section>div>div:nth-child(2) button,
+[data-testid="stFileUploader"] section button[data-testid="baseButton-secondary"]~button,
+[data-testid="stFileUploader"] section div[data-testid="stFileUploaderDropzone"]>div>button:not(:first-of-type){
     display:none!important}
+[data-testid="stFileUploader"] section div[data-testid="stFileUploaderDropzone"]{
+    position:relative!important}
+[data-testid="stFileUploader"] section div[data-testid="stFileUploaderDropzone"]>div{
+    display:flex!important;align-items:center!important;gap:.75rem!important}
 
 [data-testid="stImage"] img{border-radius:18px!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:0 20px 60px rgba(0,0,0,.5)!important}
 [data-testid="stSpinner"] *{color:rgba(255,255,255,.5)!important}
