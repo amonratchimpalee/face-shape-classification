@@ -125,28 +125,29 @@ html,body,[class*="css"],p,span,div,label,button{font-family:'DM Sans',sans-seri
 .st-emotion-cache-1t3cokr{
     color:rgba(255,255,255,.9)!important;
     -webkit-text-fill-color:rgba(255,255,255,.9)!important}
-[data-testid="stFileUploader"] section button{
+[data-testid="stFileUploaderDropzone"] button{
+    all:unset!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:.4rem 1rem!important;
     background:rgba(255,255,255,.08)!important;
     border:1px solid rgba(255,255,255,.2)!important;
     border-radius:8px!important;
     color:#fff!important;
     -webkit-text-fill-color:#fff!important;
-    position:relative!important;
-    z-index:1!important}
-[data-testid="stFileUploader"] section button *{
-    color:#fff!important;
-    -webkit-text-fill-color:#fff!important}
-[data-testid="stFileUploaderDropzone"] button~button,
-[data-testid="stFileUploaderDropzone"] button+button,
-[data-testid="stFileUploaderDropzoneInstructions"]~div button,
-[data-testid="stFileUploader"] section>div>div:nth-child(2) button,
-[data-testid="stFileUploader"] section button[data-testid="baseButton-secondary"]~button,
-[data-testid="stFileUploader"] section div[data-testid="stFileUploaderDropzone"]>div>button:not(:first-of-type){
+    font-size:.85rem!important;
+    cursor:pointer!important;
+    white-space:nowrap!important;
+    flex-shrink:0!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:fit-content!important}
+[data-testid="stFileUploaderDropzone"] button:hover{
+    background:rgba(220,150,20,.2)!important;
+    border-color:rgba(220,150,20,.6)!important}
+[data-testid="stFileUploaderDropzone"] button ~ button{
     display:none!important}
-[data-testid="stFileUploader"] section div[data-testid="stFileUploaderDropzone"]{
-    position:relative!important}
-[data-testid="stFileUploader"] section div[data-testid="stFileUploaderDropzone"]>div{
-    display:flex!important;align-items:center!important;gap:.75rem!important}
 
 [data-testid="stImage"] img{border-radius:18px!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:0 20px 60px rgba(0,0,0,.5)!important}
 [data-testid="stSpinner"] *{color:rgba(255,255,255,.5)!important}
