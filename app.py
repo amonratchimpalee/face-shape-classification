@@ -130,12 +130,25 @@ html, body, [class*="css"], p, span, div, label, button {
     margin: 0 0 2rem;
 }
 
-/* ─── File uploader label ─── */
+/* ─── File uploader label — ซ่อน ─── */
 [data-testid="stFileUploader"] label,
 [data-testid="stFileUploader"] label * {
-    color: rgba(255,255,255,.7) !important;
-    -webkit-text-fill-color: rgba(255,255,255,.7) !important;
-    font-size: .95rem !important;
+    display: none !important;
+}
+
+/* ─── ซ่อน native uploader wrapper กรอบ ─── */
+[data-testid="stFileUploader"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+[data-testid="stFileUploader"] > div,
+[data-testid="stFileUploader"] > div > div {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
 /* ─── ซ่อน native dropzone ทั้งหมด (ใช้ custom dropzone แทน) ─── */
@@ -183,6 +196,23 @@ html, body, [class*="css"], p, span, div, label, button {
 }
 [data-testid="stCheckbox"] [data-baseweb="checkbox"] div {
     border-color: rgba(220,150,20,.5) !important;
+}
+
+/* ─── ปุ่มอัพโหลดใหม่ ─── */
+[data-testid="stButton"] button[kind="secondary"],
+.stButton > button:not([kind="primary"]) {
+    background: rgba(220,150,20,.12) !important;
+    border: 1px solid rgba(220,150,20,.35) !important;
+    border-radius: 10px !important;
+    color: rgba(255,200,80,.8) !important;
+    -webkit-text-fill-color: rgba(255,200,80,.8) !important;
+    font-size: .85rem !important;
+    margin-top: .5rem !important;
+    transition: background .2s !important;
+}
+.stButton > button:not([kind="primary"]):hover {
+    background: rgba(220,150,20,.22) !important;
+    border-color: rgba(220,150,20,.55) !important;
 }
 
 /* ─── Primary button (consent confirm) ─── */
@@ -308,6 +338,7 @@ uploaded_file = st.file_uploader(
     "upload",
     type=["jpg", "jpeg", "png"],
     label_visibility="collapsed",
+    key=f"uploader_{st.session_state.get('uploader_key', 0)}",
 )
 
 # ─── Custom dropzone UI (แสดงเฉพาะตอนยังไม่มีไฟล์) ───
@@ -316,69 +347,67 @@ if not uploaded_file:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: transparent; font-family: 'DM Sans', sans-serif; }
+body { background: transparent; font-family: 'DM Sans', sans-serif; padding: 0; }
+.label {
+    font-size: .95rem;
+    color: rgba(255,255,255,.65);
+    margin-bottom: .6rem;
+    display: flex; align-items: center; gap: 6px;
+}
 .dropzone {
-    border: 1.5px dashed rgba(255,255,255,.2);
-    border-radius: 18px;
-    background: rgba(255,255,255,.04);
-    padding: 2.5rem 1.5rem;
+    border: 1.5px dashed rgba(255,255,255,.15);
+    border-radius: 16px;
+    background: rgba(255,255,255,.03);
+    padding: 2rem 1.5rem;
     text-align: center;
     cursor: pointer;
     transition: border-color .2s, background .2s;
     user-select: none;
 }
 .dropzone:hover, .dropzone.over {
-    border-color: rgba(220,150,20,.65);
-    background: rgba(220,150,20,.06);
+    border-color: rgba(220,150,20,.6);
+    background: rgba(220,150,20,.05);
 }
-.dz-icon { font-size: 2rem; margin-bottom: .6rem; opacity: .5; }
-.dz-main { font-size: .95rem; color: rgba(255,255,255,.55); margin-bottom: .35rem; }
-.dz-main span {
-    color: rgba(255,200,80,.85);
+.dz-icon { font-size: 1.8rem; margin-bottom: .5rem; opacity: .6; }
+.dz-main { font-size: .9rem; color: rgba(255,255,255,.45); margin-bottom: .3rem; }
+.dz-btn {
+    display: inline-block;
+    color: rgba(255,200,80,.9);
     font-weight: 500;
     border: 1px solid rgba(220,150,20,.45);
     border-radius: 8px;
-    padding: .25rem .75rem;
+    padding: .22rem .7rem;
     background: rgba(220,150,20,.12);
     margin-left: .3rem;
+    font-size: .88rem;
 }
-.dz-sub { font-size: .78rem; color: rgba(255,255,255,.25); }
-.dz-file { display:none; margin-top:.75rem; font-size:.83rem; color:rgba(255,200,80,.75); }
-.dz-file.show { display:block; }
+.dz-sub { font-size: .75rem; color: rgba(255,255,255,.2); margin-top: .25rem; }
 </style>
+<div class="label">📸 &nbsp;อัปโหลดภาพใบหน้าของคุณ</div>
 <div class="dropzone" id="dz">
   <div class="dz-icon">📂</div>
-  <div class="dz-main"><span>Browse files</span></div>
+  <div class="dz-main"><span class="dz-btn">Browse files</span></div>
   <div class="dz-sub">200MB per file · JPG, PNG</div>
-  <div class="dz-file" id="fname"></div>
 </div>
 <script>
 (function() {
     var dz = document.getElementById('dz');
-
     function getInput(doc) {
         return doc.querySelector('[data-testid="stFileUploader"] input[type="file"]');
     }
-
     function triggerUpload() {
         var inp = null;
         try { inp = getInput(window.parent.document); } catch(e) {}
         if (!inp) { try { inp = getInput(document); } catch(e) {} }
         if (inp) inp.click();
     }
-
     dz.addEventListener('click', triggerUpload);
-
     dz.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        dz.classList.add('over');
+        e.preventDefault(); dz.classList.add('over');
     });
-    dz.addEventListener('dragleave', function() {
-        dz.classList.remove('over');
-    });
+    dz.addEventListener('dragleave', function() { dz.classList.remove('over'); });
     dz.addEventListener('drop', function(e) {
-        e.preventDefault();
-        dz.classList.remove('over');
+        e.preventDefault(); dz.classList.remove('over');
         var inp = null;
         try { inp = getInput(window.parent.document); } catch(e) {}
         if (!inp) { try { inp = getInput(document); } catch(e) {} }
@@ -389,26 +418,9 @@ body { background: transparent; font-family: 'DM Sans', sans-serif; }
             inp.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
-
-    // watch for file selection to show filename
-    function watchInput() {
-        var inp = null;
-        try { inp = getInput(window.parent.document); } catch(e) {}
-        if (!inp) { try { inp = getInput(document); } catch(e) {} }
-        if (inp) {
-            inp.addEventListener('change', function() {
-                if (inp.files && inp.files[0]) {
-                    var fn = document.getElementById('fname');
-                    fn.textContent = '✓ ' + inp.files[0].name;
-                    fn.classList.add('show');
-                }
-            });
-        }
-    }
-    setTimeout(watchInput, 800);
 })();
 </script>
-""", height=160)
+""", height=170)
 
 if not uploaded_file:
     st.markdown("""
@@ -522,6 +534,10 @@ if uploaded_file:
         with st.spinner("🔍 กำลังวิเคราะห์..."):
             face_shape, confidence, ratiog, score, img_out, face_detected = predict_face_shape(img_pil)
         st.image(img_out, use_container_width=True)
+        # ─── ปุ่มอัพโหลดใหม่ ───
+        if st.button("🔄  อัพโหลดภาพใหม่", use_container_width=True, key="reupload"):
+            st.session_state["uploader_key"] = st.session_state.get("uploader_key", 0) + 1
+            st.rerun()
 
     with col2:
         if face_detected == "multiple":
@@ -627,4 +643,4 @@ body{{background:transparent;font-family:'DM Sans',sans-serif}}
 
             components.html(card_html, height=820, scrolling=False)
 
-st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>", unsafe_allow_html=True)
+st.markdown("<div class='footer'>Powered by <b>4 angie</b></div>", unsafe_allow_html=True)โ
